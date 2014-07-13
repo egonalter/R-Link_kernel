@@ -1,0 +1,16 @@
+# drivers/tomtom/sensors/ms5607/Kconfig
+#
+# Copyright (C) 2011 TomTom BV <http://www.tomtom.com/>
+# Author: Matthias Kaehlcke <matthias.kaehlcke@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+config TOMTOM_MS5607
+	tristate "MS5607 Pressure and Temperature sensor driver"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+          This option enables support for the MEAS MS5607 pressure and temperature sensor.
+

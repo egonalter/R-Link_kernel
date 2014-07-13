@@ -1,0 +1,9 @@
+TARGET = port_test
+CFLAGS = `pkg-config --cflags glib-2.0` -static
+LIBS   = `pkg-config --libs glib-2.0`
+
+.DEFAULT_GOAL = port_test
+
+port_test: port_test.c
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
+	$(STRIP) $@

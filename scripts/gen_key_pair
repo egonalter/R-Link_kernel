@@ -1,0 +1,79 @@
+#!/bin/bash
+
+##
+## gen_key_pair - create a DSA public/private key pair
+##
+## 2009-11-11 Ard Biesheuvel <ard.biesheuvel@tomtom.com>
+##
+
+ENC=""
+
+SRC="."
+DST="."
+
+[ $# -lt 3 ] || SRC=$3
+[ $# -lt 4 ] || DST=$4
+
+case "$1" in
+	kernel)
+	ENC="gpg"
+	;;
+	rootfs|loopfs)
+	ENC="gpg"
+	;;
+	*)
+	echo "Argument 1 should be key domain: kernel, rootfs or loopfs"
+	exit
+	;;
+esac
+
+CLASS="$2"
+
+case "$CLASS" in
+	dev)
+	ENC=""
+	;;
+	production)
+	CLASS="prod"
+	;;
+	*)
+	echo "Argument 2 should be key type: dev or production"
+	exit
+	;;
+esac
+
+PUBKEY=$DST/tt_$1_${CLASS}_pubkey.dsa
+PRIVKEY=$DST/tt_$1_${CLASS}_privkey.dsa
+OPENSSL_MAJOR_VER=$(openssl version | awk '{ print substr($2, 0, 1) }')
+if [ $OPENSSL_MAJOR_VER -ge 1 ]; then
+	GEN_KEY_CMD="openssl genpkey -genparam -algorithm DSA -pkeyopt dsa_paramgen_bits:2048 | openssl genpkey -paramfile /dev/stdin"
+else
+	GEN_KEY_CMD="openssl dsaparam -genkey 2048"
+fi
+
+case "$ENC" in
+	gpg)
+
+	GPG_OPTS="--no-default-keyring --keyring $SRC/$1_keyring.gpg --batch --trust-model always"
+	GPG_RECIPIENTS=""
+
+	export GNUPGHOME=$SRC
+
+	for R in `gpg $GPG_OPTS --list-keys |grep ^pub |sed 's|^.*/\(.*\) .*|\1|' | awk '{print $1}'`
+	do
+		GPG_RECIPIENTS="$GPG_RECIPIENTS -r $R"
+	done
+
+	rm -f $PUBKEY $PRIVKEY.gpg
+
+	eval $GEN_KEY_CMD	 					| \
+		tee >(openssl dsa -pubout -out $PUBKEY)			| \
+		gpg $GPG_OPTS $GPG_RECIPIENTS -e -o $PRIVKEY.gpg
+	;;
+	*)
+	eval $GEN_KEY_CMD	 					| \
+		tee >(openssl dsa -pubout -out $PUBKEY)			| \
+		openssl dsa $ENC -out $PRIVKEY 2> /dev/null
+	;;
+esac
+

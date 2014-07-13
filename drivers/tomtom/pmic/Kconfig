@@ -1,0 +1,48 @@
+# drivers/tomtom/pmic/Kconfig
+#
+# Copyright (C) 2008 TomTom BV <http://www.tomtom.com/>
+# Author: Rogier Stam <rogier.stam@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+menuconfig TOMTOM_PMIC
+	default y
+	depends on TOMTOM_DRIVERS
+	bool "TomTom PMIC drivers"
+	---help---
+          This option enables support for Power Management ICs which ensure
+          that charging and CPU voltage are set correctly.
+
+if TOMTOM_PMIC
+
+config TOMTOM_PMIC_LTC3555
+	tristate "Enable LTC3555 support"
+	default m
+	depends on I2C && (TOMTOM_USBMODE || TOMTOM_USBMODE_DUMMY)
+	help
+	  Support for LTC3555 PMIC to handle correct battery charging and suspend resume.
+
+config TOMTOM_PMIC_LTC3555_CPU_FREQ
+	boolean "Enable LTC3555 cpufreq support"
+	default n
+	depends on TOMTOM_PMIC_LTC3555 && CPU_FREQ
+	help
+	  Add cpufreq support to LTC3555 driver. Make sure your board actually handle that.
+
+config TOMTOM_PMIC_LTC3577
+	tristate "Enable LTC3577 support"
+	default m
+	depends on I2C && (TOMTOM_USBMODE || TOMTOM_USBMODE_DUMMY)
+	help
+	  Support for LTC3577 PMIC to handle correct battery charging and suspend resume.
+
+config TOMTOM_PMU_BCM59040_USBMODE
+	tristate "Enable BCM59040 USBMode support"
+	default n
+	depends on TOMTOM_USBMODE && PMU_DEVICE_BCM59040
+	help
+	  Basic USBMode support for BCM59040 PMU. Note this only adds USBMode support, not support for the PMU which is a different option.
+
+endif # TOMTOM_PMIC

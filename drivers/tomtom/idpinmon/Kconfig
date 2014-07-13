@@ -1,0 +1,25 @@
+# drivers/tomtom/idpinmon/Kconfig
+#
+# Copyright (C) 2010 TomTom BV <http://www.tomtom.com/>
+# Author: Andrzej Zukowski <andrzej.zukowski@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+menuconfig TOMTOM_IDPINMON
+	bool "ID Pin monitor"
+	depends on TOMTOM_DRIVERS && PLAT_S3C64XX
+	default n
+	help
+	  This option enables support for IDPIN monitor.
+
+config TOMTOM_IDPINMON_DRIVER
+	default m
+	depends on TOMTOM_IDPINMON
+	tristate "Enable ID Pin monitor"
+	help
+	  This driver enables monitors voltage on IDPIN wire on USB connector
+	  and configures real IDPIN that goes to the OTG controller via
+	  external GPIO. It also notifies user land about current state of
+	  USD ID PIN.

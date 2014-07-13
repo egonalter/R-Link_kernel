@@ -1,0 +1,1 @@
+obj-$(CONFIG_TOMTOM_TILT_TS0001_L) += tilt.o

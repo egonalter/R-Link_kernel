@@ -1,0 +1,37 @@
+#! /bin/bash
+
+COLOR=$1
+shift
+
+# shamelessly copied from elsewhere
+declare -A _COLORS
+_COLORS[black]='\E[30;47m'
+_COLORS[red]='\E[31;47m'
+_COLORS[green]='\E[32;47m'
+_COLORS[yellow]='\E[33;47m'
+_COLORS[hiyellow]='\033[1;32m'
+_COLORS[blue]='\E[34;47m'
+_COLORS[hiblue]='\033[1;34m'
+#hiblue=$blue
+_COLORS[magenta]='\E[35;47m'
+_COLORS[cyan]='\E[36;47m'
+_COLORS[white]='\E[37;47m'
+_COLORS[bold]='\033[1m'
+
+
+
+if [ -t 0 -o -S /dev/stdin ]; then
+    if [ "${TERM}" = "xterm" \
+	-o "${TERM}" = "screen" \
+	-o "${TERM}" = "rxvt" \
+	-o "${TERM}" = "ansi" ]; then
+	echo -n -e "${_COLORS[$COLOR]}"
+	echo -n $@
+	tput sgr0
+	echo
+    else
+	echo $@
+    fi
+else
+    echo $@
+fi

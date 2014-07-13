@@ -1,0 +1,16 @@
+# drivers/tomtom/can_micro/Kconfig
+#
+# Copyright (C) 2009 TomTom BV <http://www.tomtom.com/>
+# Author: Bert Janssen <bert.janssen@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+menuconfig TOMTOM_CAN_MICRO
+	default n
+	depends on TOMTOM_DRIVERS
+	tristate "TomTom CAN microcontroller driver"
+	---help---
+          This option enables support for CAN microcontroller.
+

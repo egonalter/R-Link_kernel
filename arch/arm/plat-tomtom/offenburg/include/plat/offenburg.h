@@ -1,0 +1,132 @@
+#ifndef __PLAT_OFFENBURG_H__
+#define __PLAT_OFFENBURG_H__
+
+/* Define the virtual gpio base after the last of the physical gpios */
+#define TWL4030_GPIO_BASE	200	/* GPIO chip connected to PMIC */
+#define VGPIO_OFFENBURG_BASE	400	/* Virtual gpio base */
+#define VGPIO_OFFENBURG_PMIC_BASE 600
+
+enum offenburg_vgpio_pins {
+	TT_VGPIO_BASE	= VGPIO_OFFENBURG_BASE,
+
+	/* GPS */
+	TT_VGPIO_GPS_RESET = TT_VGPIO_BASE,
+	TT_VGPIO_GPS_POWER,
+	TT_VGPIO_GPS_1PPS,
+	TT_VGPIO_GPS_TCXO_ON,
+	TT_VGPIO_GPS_ANT_SHORT,
+
+	/* BLUETOOTH */
+	TT_VGPIO_BT_RST,
+
+	/* Bluetooth WiFi combo */
+	TT_VGPIO_WIFI_RST,
+	TT_VGPIO_BT_WAKE,
+	TT_VGPIO_BT_HOST_WAKE,
+	TT_VGPIO_BT_EN,
+	TT_VGPIO_WIFI_EN,
+
+	/* LCD/LCM */
+#if !defined(CONFIG_MACH_SANTIAGO) && \
+    !defined(CONFIG_MACH_MONOPOLI)  /* TODO */
+	TT_VGPIO_LCM_PWR_ON,
+#endif
+	TT_VGPIO_LCD_PWR_ON,
+	TT_VGPIO_BACKLIGHT_DIM,
+	TT_VGPIO_LCD_RESET,
+	TT_VGPIO_LCD_STBY,
+	TT_VGPIO_LCD_DAT_EN,
+	TT_VGPIO_LCD_UD,
+	TT_VGPIO_LCD_LR,
+	TT_VGPIO_BACKLIGHT_ON,
+	TT_VGPIO_SENSE_11V0,
+
+	/* TouchPanel */
+	TT_VGPIO_TP_IRQ,
+	TT_VGPIO_TP_RESET,
+
+	/* USB */
+	TT_VGPIO_USB1_RESET,
+	TT_VGPIO_USB2_RESET,
+	TT_VGPIO_USB1_POWER_FAULT,
+	TT_VGPIO_USB3_POWER_FAULT,
+	TT_VGPIO_USB1_SPEED,
+	TT_VGPIO_USB1_SUSPEND,
+
+	/* USB charger */
+	TT_VGPIO_USB_DETECT,
+	TT_VGPIO_USB_CHRG_DET,
+	TT_VGPIO_WALL_SENSE_CONNECT,
+
+	/* CAM */
+	TT_VGPIO_CAM_IRQ,
+	TT_VGPIO_CAM_PWR_ON,
+	TT_VGPIO_CAM_ON,
+	TT_VGPIO_CAM_RST,
+
+	/* MIC */
+	TT_VGPIO_MIC_ON,
+
+	/* CAN */
+	TT_VGPIO_CAN_SYNC,
+	TT_VGPIO_CAN_RST,
+	TT_VGPIO_CAN_RST_MON,
+	TT_VGPIO_CAN_BT_MD,
+	TT_VGPIO_CAN_IRQ,
+
+	/* Apple Auth */
+	TT_VGPIO_APPLE_AUTH_RST,
+	TT_VGPIO_APPLE_AUTH_MODE0,
+	TT_VGPIO_APPLE_AUTH_MODE1,
+
+	/* 1V8 power */
+	TT_VGPIO_1V8_ON,
+
+	TT_VGPIO_PWR_HOLD,
+	TT_VGPIO_ON_OFF,
+
+	TT_VGPIO_DIAGSYS_BOOT,
+
+	/* Tilt/Orientation sensor */
+	TT_VGPIO_TILT_PWR,
+	TT_VGPIO_TILT_OUT,
+
+	/* Pressure, Accelerometer, Gyroscope Power */
+	TT_VPGIO_DR_POWER_EN,
+
+	/* Speaker amplifier */
+	TT_VGPIO_AMP_PWR_EN,
+
+	/* GPRS */
+	TT_VGPIO_GSM_SYS_EN,
+	TT_VGPIO_GSM_SYS_RST,
+
+	/* MMC power rail selector */
+	TT_VGPIO_AUX_MOVI,
+	TT_VGPIO_AUX_SD,
+
+	/* SD card */
+	TT_VGPIO_CD_SD_MICRO,
+
+	/* EEprom write protect pin */
+	TT_VGPIO_EEPROM_WP,
+
+	/* Accessory power dock pin */
+	TT_VGPIO_ACCESSORY_PWREN,
+
+	/* I2C expander lines - TODO sort this out */
+	TT_PMIC_VGPIO_BASE = VGPIO_OFFENBURG_PMIC_BASE,
+
+	/* PMIC Power signals */
+	TT_VGPIO_LCM_BL_PWR_ON = TT_PMIC_VGPIO_BASE,
+#if defined(CONFIG_MACH_SANTIAGO) || \
+    defined(CONFIG_MACH_MONOPOLI) /* TODO */
+	TT_VGPIO_LCM_PWR_ON,
+#endif
+	TT_VGPIO_3V3_ON,
+	TT_VGPIO_6V_ON,
+	TT_VGPIO_5V75_ON,
+	TT_VGPIO_5V_ON,
+};
+
+#endif

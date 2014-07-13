@@ -1,0 +1,46 @@
+power_supply-objs := power_supply_core.o
+
+ifeq ($(CONFIG_SYSFS),y)
+power_supply-objs += power_supply_sysfs.o
+endif
+
+ifeq ($(CONFIG_LEDS_TRIGGERS),y)
+power_supply-objs += power_supply_leds.o
+endif
+
+ifeq ($(CONFIG_POWER_SUPPLY_DEBUG),y)
+EXTRA_CFLAGS += -DDEBUG
+endif
+
+ifeq ($(CONFIG_POWER_S5M8751),y)
+obj-$(CONFIG_POWER_S5M8751)	+= s5m8751-power.o
+ifeq ($(CONFIG_MACH_S5P6450_TOMTOM),y)
+obj-$(CONFIG_POWER_S5M8751)	+= valdez_battery.o
+endif
+endif
+
+obj-$(CONFIG_POWER_SUPPLY)	+= power_supply.o
+
+obj-$(CONFIG_PDA_POWER)		+= pda_power.o
+obj-$(CONFIG_BATTERY_S3C)	+= s3c_fake_battery.o
+obj-$(CONFIG_APM_POWER)		+= apm_power.o
+obj-$(CONFIG_WM831X_POWER)	+= wm831x_power.o
+obj-$(CONFIG_WM8350_POWER)	+= wm8350_power.o
+obj-$(CONFIG_POWER_S5M8752)	+= s5m8752-power.o
+
+obj-$(CONFIG_BATTERY_DS2760)	+= ds2760_battery.o
+obj-$(CONFIG_BATTERY_DS2782)	+= ds2782_battery.o
+obj-$(CONFIG_BATTERY_PMU)	+= pmu_battery.o
+obj-$(CONFIG_BATTERY_OLPC)	+= olpc_battery.o
+obj-$(CONFIG_BATTERY_TOSA)	+= tosa_battery.o
+obj-$(CONFIG_BATTERY_WM97XX)	+= wm97xx_battery.o
+obj-$(CONFIG_BATTERY_BQ27x00)	+= bq27x00_battery.o
+obj-$(CONFIG_BATTERY_DA9030)	+= da9030_battery.o
+obj-$(CONFIG_BATTERY_MAX17040)	+= max17040_battery.o
+obj-$(CONFIG_CHARGER_PCF50633)	+= pcf50633-charger.o
+obj-$(CONFIG_CHARGER_CPCAP)	+= cpcap-charger.o
+obj-$(CONFIG_CHARGER_CPCAP)	+= cpcap-usb-charger.o
+obj-$(CONFIG_CHARGER_CPCAP)	+= cpcap-factory.o
+obj-$(CONFIG_BATTERY_CPCAP)	+= cpcap-battery.o
+obj-$(CONFIG_TWL4030_BCI_BATTERY)	+= twl4030_bci_battery.o
+obj-$(CONFIG_TWL6030_BCI_BATTERY)	+= twl6030_bci_battery.o

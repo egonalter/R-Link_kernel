@@ -1,0 +1,715 @@
+/*
+ * audio.h  --  S5M8752 Advanced PMIC with AUDIO Codec
+ *
+ * Copyright 2010 Samsung Electronics.
+ *
+ *  This program is free software; you can redistribute  it and/or modify it
+ *  under  the terms of  the GNU General  Public License as published by the
+ *  Free Software Foundation;  either version 2 of the  License, or (at your
+ *  option) any later version.
+ */
+
+#ifndef __LINUX_S5M8752_AUDIO_H_
+#define __LINUX_S5M8752_AUDIO_H_
+
+#define ID_S5M8752_DAC				14
+#define ID_S5M8752_ADC				15
+
+#define S5M8752_DAI_RX				0
+#define S5M8752_DAI_TX				1
+
+#define S5M8752_MCLKRATIO			0
+#define S5M8752_BCLKRATIO			1
+
+/* S5M8752 ref.board has a 12MHz crystal oscillator */
+#define SMDK64XX_S5M8752_FREQ			12000000
+
+/* AD_PDB1 (0x25) */
+#define S5M8752_RSTB_ADC_MASK			(0x1 << 4)
+#define S5M8752_RSTB_ADC_SHIFT			4
+#define S5M8752_EN_DWA_MASK			(0x1 << 3)
+#define S5M8752_EN_DWA_SHIFT			3
+#define S5M8752_BS_ADC_MASK			(0x7 << 0)
+#define S5M8752_BS_ADC_SHIFT			0
+
+/* AD_PDB2 (0x26) */
+#define S5M8752_PDB_DIFFL_MASK			(0x1 << 7)
+#define S5M8752_PDB_DIFFL_SHIFT			7
+#define S5M8752_PDB_ADMIXL_MASK			(0x1 << 6)
+#define S5M8752_PDB_ADMIXL_SHIFT		6
+#define S5M8752_PDB_DCTL_MASK			(0x1 << 5)
+#define S5M8752_PDB_DCTL_SHIFT			5
+#define S5M8752_PDB_DSML_MASK			(0x1 << 4)
+#define S5M8752_PDB_DSML_SHIFT			4
+#define S5M8752_PDB_MICR_MASK			(0x1 << 3)
+#define S5M8752_PDB_MICR_SHIFT			3
+#define S5M8752_PDB_ADMIXR_MASK			(0x1 << 2)
+#define S5M8752_PDB_ADMIXR_SHIFT		2
+#define S5M8752_PDB_DCTR_MASK			(0x1 << 1)
+#define S5M8752_PDB_DCTR_SHIFT			1
+#define S5M8752_PDB_DSMR_MASK			(0x1 << 0)
+#define S5M8752_PDB_DSMR_SHIFT			0
+
+ /* AD_PDB3 (0x27) */
+#define S5M8752_PDB_MBIAS_MASK			(0x1 << 1)
+#define S5M8752_PDB_MBIAS_SHIFT			1
+#define S5M8752_PDB_ADREF_MASK			(0x1 << 0)
+#define S5M8752_PDB_ADREF_SHIFT			0
+
+/* AD_MUX (0x28) */
+#define S5M8752_SEL_ADMIXL_MASK			(0x3 << 4)
+#define S5M8752_SEL_DLINE_ADMIXL_SHIFT		4
+#define S5M8752_SEL_LLINE_ADMIXL_SHIFT		5
+enum {
+	DLine_to_LADC = 1,
+	LLine_to_LADC,
+};
+
+#define S5M8752_SEL_ADMIXR_MASK			(0x3 << 0)
+#define S5M8752_SEL_DLINE_ADMIXR_SHIFT		0
+#define S5M8752_SEL_RLINE_ADMIXR_SHIFT		1
+enum {
+	MIC_to_RADC = 1,
+	RLine_to_RADC,
+};
+
+/* AD_LINEVOL (0x29) */
+#define S5M8752_VOL_RIN_MASK			(0x7 << 4)
+#define S5M8752_VOL_RIN_SHIFT			4
+#define S5M8752_VOL_LIN_MASK			(0x7 << 0)
+#define S5M8752_VOL_LIN_SHIFT			0
+
+/* AD_BST (0x2A) */
+#define S5M8752_VOL_BOOSTR_MASK			(0x3 << 4)
+#define S5M8752_VOL_BOOSTR_SHIFT		4
+#define S5M8752_VOL_DIFFL_MASK			(0x7 << 0)
+#define S5M8752_VOL_DIFFL_SHIFT			0
+
+/* AD_PGAR (0x2B) */
+#define S5M8752_VOL_PGAR_MASK			(0x3F << 0)
+#define S5M8752_VOL_PGAR_SHIFT			0
+
+/* AD_DIG (0x2C) */
+#define S5M8752_LOOP_MASK			(0x1 << 6)
+#define S5M8752_LOOP_SHIFT			6
+#define S5M8752_DMIC_OSR_MASK			(0x3 << 4)
+#define S5M8752_DMIC_OSR_SHIFT			4
+#define S5M8752_MUTE_MASK			(0x1 << 3)
+#define S5M8752_MUTE_SHIFT			3
+#define S5M8752_HPFEN_MASK			(0x1 << 1)
+#define S5M8752_HPFEN_SHIFT			1
+#define S5M8752_HPFSEL_MASK			(0x1 << 0)
+#define S5M8752_HPFSEL_SHIFT			0
+
+/* AD_DMUX (0x2D) */
+#define S5M8752_DISL_MASK			(0x3 << 2)
+#define S5M8752_DISL_SHIFT			2
+enum {
+	LDSM_to_LADC = 0,
+	RDSM_to_LADC,
+	LDMIC_to_LADC,
+	RDMIC_to_LADC,
+};
+
+#define S5M8752_DISR_MASK			(0x3 << 0)
+#define S5M8752_DISR_SHIFT			0
+enum {
+	RDSM_to_RADC = 0,
+	LDSM_to_RADC,
+	RDMIC_to_RADC,
+	LDMIC_to_RADC,
+};
+
+/* AD_VOLL (0x2E) */
+#define S5M8752_VOLL_MASK			(0xFF << 0)
+#define S5M8752_VOLL_SHIFT			0
+#define S5M8752_VOLL_DEF			0x18
+
+/* AD_VOLR (0x2F) */
+#define S5M8752_VOLR_MASK			(0xFF << 0)
+#define S5M8752_VOLR_SHIFT			0
+#define S5M8752_VOLR_DEF			0x18
+
+/* AD_ALC1 (0x30) */
+#define S5M8752_WINSEL_MASK			(0x3 << 4)
+#define S5M8752_WINSEL_SHIFT			4
+#define S5M8752_ALC_EN_MASK			(0x1 << 3)
+#define S5M8752_ALC_EN_SHIFT			3
+#define S5M8752_LIMITER_MASK			(0x1 << 2)
+#define S5M8752_LIMITER_SHIFT			2
+#define S5M8752_ALC_MODE_MASK			(0x3 << 0)
+#define S5M8752_ALC_MODE_SHIFT			0
+
+/* AD_ALC2 (0x31) */
+#define S5M8752_MAXGAIN_MASK			(0x3F << 0)
+#define S5M8752_MAXGAIN_SHIFT			0
+
+/* AD_ALC3 (0x32) */
+#define S5M8752_MINGAIN_MASK			(0x3F << 0)
+#define S5M8752_MINGAIN_SHIFT			0
+
+/* AD_ALC4 (0x33) */
+#define S5M8752_ALCLVL_L_MASK			(0x1F << 0)
+#define S5M8752_ALCLVL_L_SHIFT			0
+
+/* AD_ALC5 (0x34) */
+#define S5M8752_ALCLVL_R_MASK			(0x1F << 0)
+#define S5M8752_ALCLVL_R_SHIFT			0
+
+/* AD_ALC6 (0x35) */
+#define S5M8752_HLD_MASK			(0x1F << 0)
+#define S5M8752_HLD_SHIFT			0
+
+/* AD_ALC7 (0x36) */
+#define S5M8752_DCY_MASK			(0x1F << 0)
+#define S5M8752_DCY_SHIFT			0
+
+/* AD_ALC8 (0x37) */
+#define S5M8752_ATK_MASK			(0x1F << 0)
+#define S5M8752_ATK_SHIFT			0
+
+/* AD_ALC9 (0x38) */
+#define S5M8752_ALCNGTH_MASK			(0x1F << 3)
+#define S5M8752_ALCNGTH_SHIFT			3
+#define S5M8752_NGG_MASK			(0x3 << 1)
+#define S5M8752_NGG_SHIFT			1
+#define S5M8752_NGAT_MASK			(0x1 << 0)
+#define S5M8752_NGAT_SHIFT			0
+
+/* REF1 (0x39) */
+#define S5M8752_VMIDSEL_MASK			(0x3 << 6)
+#define S5M8752_VMIDSEL_SHIFT			6
+#define S5M8752_BS_DCT_MASK			(0x7 << 3)
+#define S5M8752_BS_DCT_SHIFT			3
+#define S5M8752_BS_MIXER_MASK			(0x7 << 0)
+#define S5M8752_BS_MIXER_SHIFT			0
+enum {
+	VMID_5k = 0,
+	VMID_50k,
+	VMIC_500k,
+};
+
+/* REF2 (0x3A) */
+#define S5M8752_RESCT_MASK			(0x7 << 3)
+#define S5M8752_RESCT_SHIFT			3
+#define S5M8752_BS_REF_MASK			(0x7 << 0)
+#define S5M8752_BS_REF_SHIFT			0
+
+/* REF3 (0x3B) */
+#define S5M8752_RSTB_DAC_MASK			(0x1 << 3)
+#define S5M8752_RSTB_DAC_SHIFT			3
+#define S5M8752_PDB_DCF_MASK			(0x1 << 2)
+#define S5M8752_PDB_DCF_SHIFT			2
+#define S5M8752_PDB_DAREF_MASK			(0x1 << 1)
+#define S5M8752_PDB_DAREF_SHIFT			1
+#define S5M8752_PDB_MID_MASK			(0x1 << 0)
+#define S5M8752_PDB_MID_SHIFT			0
+
+/* DA_PDB (0x3C) */
+#define S5M8752_PDB_SPKM_MASK			(0x1 << 6)
+#define S5M8752_PDB_SPKM_SHIFT			6
+#define S5M8752_PDB_HPML_MASK			(0x1 << 5)
+#define S5M8752_PDB_HPML_SHIFT			5
+#define S5M8752_PDB_HPMR_MASK			(0x1 << 4)
+#define S5M8752_PDB_HPMR_SHIFT			4
+#define S5M8752_PDB_LDML_MASK			(0x1 << 3)
+#define S5M8752_PDB_LDML_SHIFT			3
+#define S5M8752_PDB_LDMR_MASK			(0x1 << 2)
+#define S5M8752_PDB_LDMR_SHIFT			2
+#define S5M8752_PDB_DACL_MASK			(0x1 << 1)
+#define S5M8752_PDB_DACL_SHIFT			1
+#define S5M8752_PDB_DACR_MASK			(0x1 << 0)
+#define S5M8752_PDB_DACR_SHIFT			0
+
+/* DA_AMIX0 (0x3D) */
+#define S5M8752_SEL_LDML_MASK			(0x3F << 0)
+#define S5M8752_SEL_LDML_SHIFT			0
+
+#define S5M8752_NONE_LOUTMIX			0x0
+#define S5M8752_LDAC_LOUTMIX_SHIFT		0
+#define S5M8752_LLINE_LOUTMIX_SHIFT		1
+#define S5M8752_DLINE_LOUTMIX_SHIFT		2
+#define S5M8752_RLINE_LOUTMIX_SHIFT		3
+#define S5M8752_MIC_LOUTMIX_SHIFT		4
+#define S5M8752_RDAC_LOUTMIX_SHIFT		5
+
+/* DA_AMIX1 (0x3E) */
+#define S5M8752_SEL_LDMR_MASK			(0x3F << 0)
+#define S5M8752_SEL_LDMR_SHIFT			0
+
+#define S5M8752_NONE_ROUTMIX			0x0
+#define S5M8752_LDAC_ROUTMIX_SHIFT		0
+#define S5M8752_LLINE_ROUTMIX_SHIFT		1
+#define S5M8752_DLINE_ROUTMIX_SHIFT		2
+#define S5M8752_RLINE_ROUTMIX_SHIFT		3
+#define S5M8752_MIC_ROUTMIX_SHIFT		4
+#define S5M8752_RDAC_ROUTMIX_SHIFT		5
+
+/* DA_AMIX2 (0x3F) */
+#define S5M8752_SEL_HPML_MASK			(0x3F << 0)
+#define S5M8752_SEL_HPML_SHIFT			0
+
+#define S5M8752_NONE_HPLMIX			0x0
+#define S5M8752_LDAC_HPLMIX_SHIFT		0
+#define S5M8752_LLINE_HPLMIX_SHIFT		1
+#define S5M8752_DLINE_HPLMIX_SHIFT		2
+#define S5M8752_RLINE_HPLMIX_SHIFT		3
+#define S5M8752_MIC_HPLMIX_SHIFT		4
+#define S5M8752_RDAC_HPLMIX_SHIFT		5
+
+/* DA_AMIX3 (0x40) */
+#define S5M8752_SEL_HPMR_MASK			(0x3F << 0)
+#define S5M8752_SEL_HPMR_SHIFT			0
+
+#define S5M8752_NONE_HPRMIX			0x0
+#define S5M8752_LDAC_HPRMIX_SHIFT		0
+#define S5M8752_LLINE_HPRMIX_SHIFT		1
+#define S5M8752_DLINE_HPRMIX_SHIFT		2
+#define S5M8752_RLINE_HPRMIX_SHIFT		3
+#define S5M8752_MIC_HPRMIX_SHIFT		4
+#define S5M8752_RDAC_HPRMIX_SHIFT		5
+
+/* DA_AMIX4 (0x41) */
+#define S5M8752_SEL_SPKM_MASK			(0x3F << 0)
+#define S5M8752_SEL_SPKM_SHIFT			0
+
+#define S5M8752_NONE_SPKMIX			0x0
+#define S5M8752_LDAC_SPKMIX_SHIFT		0
+#define S5M8752_LLINE_SPKMIX_SHIFT		1
+#define S5M8752_DLINE_SPKMIX_SHIFT		2
+#define S5M8752_RLINE_SPKMIX_SHIFT		3
+#define S5M8752_MIC_SPKMIX_SHIFT		4
+#define S5M8752_RDAC_SPKMIX_SHIFT		5
+
+/* DA_DEN (0x42) */
+#define S5M8752_ADC_EN_MASK			(0x1 << 5)
+#define S5M8752_ADC_EN_SHIFT			5
+#define S5M8752_DAC_EN_MASK			(0x1 << 4)
+#define S5M8752_DAC_EN_SHIFT			4
+#define S5M8752_MIX_EN_MASK			(0x1 << 3)
+#define S5M8752_MIX_EN_SHIFT			3
+#define S5M8752_SRC2_EN_MASK			(0x1 << 2)
+#define S5M8752_SRC2_EN_SHIFT			2
+#define S5M8752_SRC1_EN_MASK			(0x1 << 1)
+#define S5M8752_SRC1_EN_SHIFT			1
+#define S5M8752_DOUT_EN_MASK			(0x1 << 0)
+#define S5M8752_DOUT_EN_SHIFT			0
+
+/* DA_DMIX1 (0x43) */
+#define S5M8752_MIX_EN2_MASK			(0x1 << 7)
+#define S5M8752_MIX_EN2_SHIFT			7
+#define S5M8752_MIX_LVL2_MASK			(0x7 << 4)
+#define S5M8752_MIX_LVL2_SHIFT			4
+#define S5M8752_MIX_EN1_MASK			(0x1 << 3)
+#define S5M8752_MIX_EN1_SHIFT			3
+#define S5M8752_MIX_LVL1_MASK			(0x7 << 0)
+#define S5M8752_MIX_LVL1_SHIFT			0
+
+/* DA_DMIX2 (0x44) */
+#define S5M8752_MIX_EN3_MASK			(0x1 << 3)
+#define S5M8752_MIX_EN3_SHIFT			3
+#define S5M8752_MIX_LVL3_MASK			(0x7 << 0)
+#define S5M8752_MIX_LVL3_SHIFT			0
+
+/* DA_DVO1 (0x45) */
+#define S5M8752_DAC_VOLL_MASK			(0xFF << 0)
+#define S5M8752_DAC_VOLL_DEF			0x18
+#define S5M8752_DAC_VOLL_SHIFT			0
+
+/* DA_DVO2 (0x46) */
+#define S5M8752_DAC_VOLR_MASK			(0xFF << 0)
+#define S5M8752_DAC_VOLR_DEF			0x18
+#define S5M8752_DAC_VOLR_SHIFT			0
+
+/* DA_CTL (0x47) */
+#define S5M8752_DWAB_MASK			(0x1 << 7)
+#define S5M8752_DWAB_SHIFT			7
+#define S5M8752_DTHON_MASK			(0x1 << 6)
+#define S5M8752_DTHON_SHIFT			6
+#define S5M8752_DAMT_MASK			(0x7 << 3)
+#define S5M8752_DAMT_SHIFT			3
+#define S5M8752_SDTH_MASK			(0x1 << 2)
+#define S5M8752_SDTH_SHIFT			2
+#define S5M8752_AIC_MASK			(0x1 << 1)
+#define S5M8752_AIC_SHIFT			1
+#define S5M8752_MUTE_DAC_MASK			(0x1 << 0)
+#define S5M8752_MUTE_DAC_SHIFT			0
+
+/* DA_OFF (0x48) */
+#define S5M8752_OFFSET_MASK			(0xFF << 0)
+#define S5M8752_OFFSET_SHIFT			0
+
+/* DOUTMX1 (0x49) */
+#define S5M8752_OF_SGN_MASK			(0x1 << 7)
+#define S5M8752_OF_SGN_SHIFT			7
+#define S5M8752_DOUT_SEL2_MASK			(0x3 << 2)
+#define S5M8752_DOUT_SEL2_SHIFT			2
+enum {
+	DAC_to_DOUTSEL2 = 0,
+	ADC_to_DOUTSEL2,
+	CH1_to_DOUTSEL2,
+};
+
+#define S5M8752_DOUT_SEL1_MASK			(0x3 << 0)
+#define S5M8752_DOUT_SEL1_SHIFT			0
+enum {
+	DAC_to_DOUTSEL1 = 0,
+	ADC_to_DOUTSEL1,
+	CH2_to_DOUTSEL1,
+};
+
+/* DA_ALC1 (0x4A) */
+#define S5M8752_NG_HYS_MASK			(0x3 << 6)
+#define S5M8752_NG_HYS_SHIFT			6
+#define S5M8752_WINSEL_MASK			(0x3 << 4)
+#define S5M8752_WINSEL_SHIFT			4
+#define S5M8752_ALC_EN_MASK			(0x1 << 3)
+#define S5M8752_ALC_EN_SHIFT			3
+#define S5M8752_LIMITER_MASK			(0x1 << 2)
+#define S5M8752_LIMITER_SHIFT			2
+#define S5M8752_ALC_MODE_MASK			(0x3 << 0)
+#define S5M8752_ALC_MODE_SHIFT			0
+
+/* DA_ALC2 (0x4B) */
+#define S5M8752_MAXGAIN_MASK			(0x3F << 0)
+#define S5M8752_MAXGAIN_SHIFT			0
+
+/* DA_ALC3 (0x4C) */
+#define S5M8752_MINGAIN_MASK			(0x3F << 0)
+#define S5M8752_MINGAIN_SHIFT			0
+
+/* DA_ALC4 (0x4D) */
+#define S5M8752_ALCLVL_L_MASK			(0x1F << 0)
+#define S5M8752_ALCLVL_L_SHIFT			0
+
+/* DA_ALC5 (0x4E) */
+#define S5M8752_ALCLVL_R_MASK			(0x1F << 0)
+#define S5M8752_ALCLVL_R_SHIFT			0
+
+/* DA_ALC6 (0x4F) */
+#define S5M8752_HLD_MASK			(0x1F << 0)
+#define S5M8752_HLD_SHIFT			0
+
+/* DA_ALC7 (0x50) */
+#define S5M8752_DCY_MASK			(0x1F << 0)
+#define S5M8752_DCY_SHIFT			0
+
+/* DA_ALC8 (0x51) */
+#define S5M8752_ATK_MASK			(0x1F << 0)
+#define S5M8752_ATK_SHIFT			0
+
+/* DA_ALC9 (0x52) */
+#define S5M8752_ALCNGTH_MASK			(0x1F << 3)
+#define S5M8752_ALCNGTH_SHIFT			3
+#define S5M8752_NGG_MASK			(0x3 << 1)
+#define S5M8752_NGG_SHIFT			1
+#define S5M8752_NGAT_MASK			(0x1 << 0)
+#define S5M8752_NGAT_SHIFT			0
+
+/* SYS_CTRL1 (0x53) */
+#define S5M8752_MASTER_SW1_MASK			(0x1 << 7)
+#define S5M8752_MASTER_SW1_SHIFT		7
+#define S5M8752_MASTER_SW2_MASK			(0x1 << 6)
+#define S5M8752_MASTER_SW2_SHIFT		6
+#define S5M8752_MASTER_MASK			(0x1 << 3)
+#define S5M8752_MASTER_SHIFT			3
+#define S5M8752_PDN_MASK			(0x1 << 0)
+#define S5M8752_PDN_SHIFT			0
+
+/* SYS_CTRL2 (0x54) */
+#define S5M8752_PLL_MGR_MASK			(0x1 << 6)
+#define S5M8752_PLL_MGR_SHIFT			6
+#define S5M8752_PLL_SEL_MASK			(0x3 << 4)
+#define S5M8752_PLL_SEL_SHIFT			4
+#define S5M8752_SAMP_RATE_MASK			(0xF << 0)
+#define S5M8752_SAMP_RATE_SHIFT			0
+enum {
+	S5M8752_PLL_CLK_12MHz = 0,
+	S5M8752_PLL_CLK_13MHz,
+	S5M8752_PLL_CLK_26MHz,
+	S5M8752_PLL_CLK_19_2MHz,
+};
+
+enum {
+	S5M8752_SAMP_RATE_8K = 0,
+	S5M8752_SAMP_RATE_11_025K,
+	S5M8752_SAMP_RATE_16K,
+	S5M8752_SAMP_RATE_22_05K,
+	S5M8752_SAMP_RATE_32K,
+	S5M8752_SAMP_RATE_44_1K,
+	S5M8752_SAMP_RATE_48K,
+	S5M8752_SAMP_RATE_64K,
+	S5M8752_SAMP_RATE_88_2K,
+	S5M8752_SAMP_RATE_96K,
+};
+
+/* SYS_CTRL3 (0x55) */
+#define S5M8752_PCM_DL_MASK			(0x1 << 5)
+#define S5M8752_PCM_DL_SHIFT			5
+#define S5M8752_MSLOT_MASK			(0x3 << 3)
+#define S5M8752_MSLOT_SHIFT			3
+#define S5M8752_I2S_XFS_MASK			(0x3 << 1)
+#define S5M8752_I2S_XFS_SHIFT			1
+#define S5M8752_I2S_PCM_MASK			(0x1 << 0)
+#define S5M8752_I2S_PCM_SHIFT			0
+enum {
+	S5M8752_MASTER_I2S = 0,
+	S5M8752_MASTER_PCM,
+};
+
+/* SYS_CTRL4 (0x56) */
+#define S5M8752_CH_SEL_MASK			(0x1 << 5)
+#define S5M8752_CH_SEL_SHIFT			5
+#define S5M8752_MCK_SEL_MASK			(0x3 << 0)
+#define S5M8752_MCK_SEL_SHIFT			0
+enum {
+	S5M8752_MCLK_RATE_256 = 0,
+	S5M8752_MCLK_RATE_384,
+	S5M8752_MCLK_RATE_512,
+};
+
+/* IN1_CTRL1 (0x57) */
+#define S5M8752_SCK_POL1_MASK			(0x1 << 1)
+#define S5M8752_SCK_POL1_SHIFT			1
+#define S5M8752_I2S_PCM1_MASK			(0x1 << 0)
+#define S5M8752_I2S_PCM1_SHIFT			0
+
+/* IN1_CTRL2 (0x58) */
+#define S5M8752_I2S_XFS1_MASK			(0x3 << 5)
+#define S5M8752_I2S_XFS1_SHIFT			5
+#define S5M8752_LRCK_POL1_MASK			(0x1 << 4)
+#define S5M8752_LRCK_POL1_SHIFT			4
+#define S5M8752_I2S_DF1_MASK			(0x3 << 2)
+#define S5M8752_I2S_DF1_SHIFT			2
+#define S5M8752_I2S_DL1_MASK			(0x3 << 0)
+#define S5M8752_I2S_DL1_SHIFT			0
+enum {
+	S5M8752_BCLK_RATE_32 = 0,
+	S5M8752_BCLK_RATE_48,
+	S5M8752_BCLK_RATE_64,
+};
+
+enum {
+	S5M8752_I2S_STANDARD = 0,
+	S5M8752_I2S_LJ = 1,
+	S5M8752_I2S_RJ = 2,
+};
+
+enum {
+	S5M8752_I2S_LENGTH_16 = 0,
+	S5M8752_I2S_LENGTH_18,
+	S5M8752_I2S_LENGTH_20,
+	S5M8752_I2S_LENGTH_24,
+};
+
+/* IN1_CTRL3 (0x59) */
+#define S5M8752_PCM_LR1_MASK			(0x1 << 4)
+#define S5M8752_PCM_LR1_SHIFT			4
+#define S5M8752_PCM_DF1_MASK			(0x1 << 3)
+#define S5M8752_PCM_DF1_SHIFT			3
+#define S5M8752_PCM_DL1_MASK			(0x1 << 2)
+#define S5M8752_PCM_DL1_SHIFT			2
+#define S5M8752_PCM_LAW1_MASK			(0x1 << 1)
+#define S5M8752_PCM_LAW1_SHIFT			1
+#define S5M8752_PCM_COMP1_MASK			(0x1 << 0)
+#define S5M8752_PCM_COMP1_SHIFT			0
+
+/* IN2_CTRL1 (0x5A) */
+#define S5M8752_SCK_POL2_MASK			(0x1 << 1)
+#define S5M8752_SCK_POL2_SHIFT			1
+#define S5M8752_I2S_PCM2_MASK			(0x1 << 0)
+#define S5M8752_I2S_PCM2_SHIFT			0
+
+/* IN2_CTRL2 (0x5B) */
+#define S5M8752_I2S_XFS2_MASK			(0x3 << 5)
+#define S5M8752_I2S_XFS2_SHIFT			5
+#define S5M8752_LRCK_POL2_MASK			(0x1 << 4)
+#define S5M8752_LRCK_POL2_SHIFT			4
+#define S5M8752_I2S_DF2_MASK			(0x3 << 2)
+#define S5M8752_I2S_DF2_SHIFT			2
+#define S5M8752_I2S_DL2_MASK			(0x3 << 0)
+#define S5M8752_I2S_DL2_SHIFT			0
+
+/* IN2_CTRL3 (0x5C) */
+#define S5M8752_PCM_LR2_MASK			(0x1 << 4)
+#define S5M8752_PCM_LR2_SHIFT			4
+#define S5M8752_PCM_DF2_MASK			(0x1 << 3)
+#define S5M8752_PCM_DF2_SHIFT			3
+#define S5M8752_PCM_DL2_MASK			(0x1 << 2)
+#define S5M8752_PCM_DL2_SHIFT			2
+#define S5M8752_PCM_LAW2_MASK			(0x1 << 1)
+#define S5M8752_PCM_LAW2_SHIFT			1
+#define S5M8752_PCM_COMP2_MASK			(0x1 << 0)
+#define S5M8752_PCM_COMP2_SHIFT			0
+
+/* SLOT_L2 (0x5D) */
+#define S5M8752_LSLOT_15			(0x1 << 7)
+#define S5M8752_LSLOT_14			(0x1 << 6)
+#define S5M8752_LSLOT_13			(0x1 << 5)
+#define S5M8752_LSLOT_12			(0x1 << 4)
+#define S5M8752_LSLOT_11			(0x1 << 3)
+#define S5M8752_LSLOT_10			(0x1 << 2)
+#define S5M8752_LSLOT_9				(0x1 << 1)
+#define S5M8752_LSLOT_8				(0x1 << 0)
+
+/* SLOT_L1 (0x5E) */
+#define S5M8752_LSLOT_7				(0x1 << 7)
+#define S5M8752_LSLOT_6				(0x1 << 6)
+#define S5M8752_LSLOT_5				(0x1 << 5)
+#define S5M8752_LSLOT_4				(0x1 << 4)
+#define S5M8752_LSLOT_3				(0x1 << 3)
+#define S5M8752_LSLOT_2				(0x1 << 2)
+#define S5M8752_LSLOT_1				(0x1 << 1)
+#define S5M8752_LSLOT_0				(0x1 << 0)
+
+/* SLOT_R2 (0x5F) */
+#define S5M8752_RSLOT_15			(0x1 << 7)
+#define S5M8752_RSLOT_14			(0x1 << 6)
+#define S5M8752_RSLOT_13			(0x1 << 5)
+#define S5M8752_RSLOT_12			(0x1 << 4)
+#define S5M8752_RSLOT_11			(0x1 << 3)
+#define S5M8752_RSLOT_10			(0x1 << 2)
+#define S5M8752_RSLOT_9				(0x1 << 1)
+#define S5M8752_RSLOT_8				(0x1 << 0)
+
+/* SLOT_R1 (0x60) */
+#define S5M8752_RSLOT_7				(0x1 << 7)
+#define S5M8752_RSLOT_6				(0x1 << 6)
+#define S5M8752_RSLOT_5				(0x1 << 5)
+#define S5M8752_RSLOT_4				(0x1 << 4)
+#define S5M8752_RSLOT_3				(0x1 << 3)
+#define S5M8752_RSLOT_2				(0x1 << 2)
+#define S5M8752_RSLOT_1				(0x1 << 1)
+#define S5M8752_RSLOT_0				(0x1 << 0)
+
+/* TSLOT (0x61) */
+#define S5M8752_TSLOT_MASK			(0xF << 0)
+#define S5M8752_TSLOT_SHIFT			0
+
+/* PLL_P (0x62) */
+#define S5M8752_PLL_P_MASK			(0x3F << 0)
+#define S5M8752_PLL_P_SHIFT			0
+
+/* PLL_M1 (0x63) */
+#define S5M8752_PLL_M1_MASK			(0xFF << 0)
+#define S5M8752_PLL_M1_SHIFT			0
+
+/* PLL_M2 (0x64) */
+#define S5M8752_PLL_M2_MASK			(0x3F << 0)
+#define S5M8752_PLL_M2_SHIFT			0
+
+/* PLL_S (0x65) */
+#define S5M8752_PLL_S_MASK			(0x7 << 0)
+#define S5M8752_PLL_S_SHIFT			0
+
+/* PLL_CTRL (0x66) */
+#define S5M8752_BYPASS_MASK			(0x1 << 1)
+#define S5M8752_BYPASS_SHIFT			1
+#define S5M8752_PLL_RESETB_MASK			(0x1 << 0)
+#define S5M8752_PLL_RESETB_SHIFT		0
+
+/* AMP_EN (0x67) */
+#define S5M8752_SPKAMP_EN_MASK			(0x1 << 7)
+#define S5M8752_SPKAMP_EN_SHIFT			7
+#define S5M8752_EN_CP_MASK			(0x1 << 6)
+#define S5M8752_EN_CP_SHIFT			6
+#define S5M8752_EN_RING_MASK			(0x1 << 5)
+#define S5M8752_EN_RING_SHIFT			5
+#define S5M8752_EN_LOUT_MASK			(0x1 << 4)
+#define S5M8752_EN_LOUT_SHIFT			4
+#define S5M8752_EN_HP_PRE_L_MASK		(0x1 << 3)
+#define S5M8752_EN_HP_PRE_L_SHIFT		3
+#define S5M8752_EN_HP_PRE_R_MASK		(0x1 << 2)
+#define S5M8752_EN_HP_PRE_R_SHIFT		2
+#define S5M8752_EN_HP_DRV_L_MASK		(0x1 << 1)
+#define S5M8752_EN_HP_DRV_L_SHIFT		1
+#define S5M8752_EN_HP_DRV_R_MASK		(0x1 << 0)
+#define S5M8752_EN_HP_DRV_R_SHIFT		0
+#define S5M8752_ALL_AMP_OFF			0x00
+
+/* LINE_VLM (0x68) */
+#define S5M8752_MUTE_LINE_MASK			(0x1 << 7)
+#define S5M8752_MUTE_LINE_SHIFT			7
+#define S5M8752_LINE_VLM_MASK			(0xF << 0)
+#define S5M8752_LINE_VLM_SHIFT			0
+
+/* HPL_VLM (0x69) */
+#define S5M8752_MUTE_HPL_MASK			(0x1 << 7)
+#define S5M8752_MUTE_HPL_SHIFT			7
+#define S5M8752_DRV_MUTE_L_MASK			(0x1 << 6)
+#define S5M8752_DRV_MUTE_L_SHIFT		6
+#define S5M8752_HPL_VLM_MASK			(0x1F << 0)
+#define S5M8752_HPL_VLM_SHIFT			0
+
+/* HPR_VLM (0x6A) */
+#define S5M8752_MUTE_HPR_MASK			(0x1 << 7)
+#define S5M8752_MUTE_HPR_SHIFT			7
+#define S5M8752_DRV_MUTE_R_MASK			(0x1 << 6)
+#define S5M8752_DRV_MUTE_R_SHIFT		6
+#define S5M8752_HPR_VLM_MASK			(0x1F << 0)
+#define S5M8752_HPR_VLM_SHIFT			0
+
+/* SPK_VLM (0x6B) */
+#define S5M8752_MUTE_SPK_MASK			(0x1 << 7)
+#define S5M8752_MUTE_SPK_SHIFT			7
+#define S5M8752_INTG_GAIN_MASK			(0x3 << 5)
+#define S5M8752_INTG_GAIN_SHIFT			5
+#define S5M8752_SPK_VLM_MASK			(0x1F << 0)
+#define S5M8752_SPK_VLM_SHIFT			0
+
+/* HP_CONFIG1 (0x6C) */
+#define S5M8752_BIASCTRL_LNA_MASK		(0x1 << 7)
+#define S5M8752_BIASCTRL_LNA_SHIFT		7
+#define S5M8752_HP_PRE_CURRENT_MASK		(0x3 << 2)
+#define S5M8752_HP_PRE_CURRENT_SHIFT		2
+#define S5M8752_HP_DRV_CURRENT_MASK		(0x3 << 0)
+#define S5M8752_HP_DRV_CURRENT_SHIFT		0
+
+/* LINE_HP_CONFIG2 (0x6D) */
+#define S5M8752_LINE_VOLTAGE_MASK		(0xF << 4)
+#define S5M8752_LINE_VOLTAGE_SHIFT		4
+#define S5M8752_HP_DRV_VOLTAGE_MASK		(0xF << 0)
+#define S5M8752_HP_DRV_VOLTAGE_SHIFT		0
+
+/* FOSC (0x6F) */
+#define S5M8752_FREQ_OSC_MASK			(0xF << 4)
+#define S5M8752_FREQ_OSC_SHIFT			4
+#define S5M8752_NCP_DELAY_MASK			(0xF << 0)
+#define S5M8752_NCP_DELAY_SHIFT			0
+
+/* SW_SIZE (0x70) */
+#define S5M8752_SW_SIZE_MASK			(0xF << 0)
+#define S5M8752_SW_SIZE_SHIFT			0
+
+/* SPK_DT (0x71) */
+#define S5M8752_SPK_DT_MASK			(0x1F << 0)
+#define S5M8752_SPK_DT_SHIFT			0
+
+/* SPK_CONFIG_SL */
+#define S5M8752_COMP_HYS_MASK			(0x1 << 7)
+#define S5M8752_COMP_HYS_SHIFT			7
+#define S5M8752_P_OFF_MASK			(0x1 << 6)
+#define S5M8752_P_OFF_SHIFT			6
+#define S5M8752_N_OFF_MASK			(0x1 << 5)
+#define S5M8752_N_OFF_SHIFT			5
+#define S5M8752_PRTCTN_EN_MASK			(0x1 << 4)
+#define S5M8752_PRTCTN_EN_SHIFT			4
+#define S5M8752_SPK_SL_MASK			(0xF << 0)
+#define S5M8752_SPK_SL_SHIFT			0
+
+/* HP_PFFSET (0x73) */
+#define S5M8752_HPROFFSET_MASK			(0xF << 4)
+#define S5M8752_HPROFFSET_SHIFT			4
+#define S5M8752_HPLOFFSET_MASK			(0xF << 0)
+#define S5M8752_HPLOFFSET_SHIFT			0
+
+/* SPK_OFFSET (0x74) */
+#define S5M8752_SPK_OFFSET_MASK			(0xF << 0)
+#define S5M8752_SPK_OFFSET_SHIFT		0
+
+extern struct snd_soc_dai s5m8752_dai[];
+extern struct snd_soc_codec_device soc_codec_dev_s5m8752;
+
+struct snd_soc_codec;
+
+#endif /* __LINUX_S5M8752_AUDIO_H_ */

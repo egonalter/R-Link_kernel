@@ -1,0 +1,87 @@
+# drivers/tomtom/sound/Kconfig
+#
+# Copyright (C) 2009 TomTom BV <http://www.tomtom.com/>
+# Author: Niels Langendorff <niels.langendorff@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+menuconfig TOMTOM_NASHVILLE
+	default n
+	depends on TOMTOM_DRIVERS
+	tristate "TomTom Nashville drivers"
+	---help---
+          This option enables support for Nashville.
+
+
+if TOMTOM_NASHVILLE
+
+config TOMTOM_NASHVILLE_SCENARI
+	tristate "Nashville scenari system"
+	depends on TOMTOM_DRIVERS && (PLAT_BCM476X || MACH_CORDOBA || MACH_TORINOS || MACH_SEOUL || MACH_LIMA || MACH_HAVANA || MACH_VENICE || MACH_SANTIAGO || MACH_MONOPOLI || MACH_STRASBOURG || MACH_STRASBOURG_A2 || MACH_S5P6450_TOMTOM || MACH_STRASBOURG_XENIA)
+	default y
+	help
+	  Enable the nashville scenari subsystem
+
+config TOMTOM_NASHVILLE_SCENARI_DUMMY
+	bool "Dummy handler"
+ 	depends on TOMTOM_NASHVILLE_SCENARI
+	help
+	  The default choice if you don't have a platform specific handler yet.
+
+config TOMTOM_NASHVILLE_SCENARI_WM8990
+	bool "WM8990 handler"
+ 	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_SOC_WM8990
+	help
+	  Handler for the WM8990 codec.
+
+config TOMTOM_NASHVILLE_SCENARI_ADAU1761
+	bool "ADAU1761 handler"
+ 	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_SOC_ADAU1761
+	help
+	  Handler for the Analog devices 1761 codec.
+
+config TOMTOM_NASHVILLE_SCENARI_BCM4760
+	bool "Broadcom Bcm4760 handler"
+ 	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_BCM476X_SOC_INTERNAL
+	help
+	  Handler for the Broadcom 4760 codec.
+
+config TOMTOM_NASHVILLE_SCENARI_S5M8751
+	bool "S5M8751 handler"
+ 	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_SOC_S5M8751
+	default y if SND_SOC_S5M8751=y
+	default y if SND_SOC_S5M8751=m
+	help
+	  Handler for the Samsung S5M8751 codec.
+
+config TOMTOM_NASHVILLE_SCENARI_TLV320ADC3101
+	bool "TLV320ADC3101 handler"
+ 	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_SOC_TLV320ADC3101
+	default y if SND_SOC_TLV320ADC3101=y
+	default y if SND_SOC_TLV320ADC3101=m
+	help
+	  Handler for the Texas Instruments TLV320ADC3101 codec.
+
+config TOMTOM_NASHVILLE_SCENARI_TWL4030
+	bool "TI TWL4030 handler"
+	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_SOC_TWL4030
+	help
+	  Handler for the TI codec in the TWL4030 PMIC family
+
+config TOMTOM_NASHVILLE_SCENARI_UDA1334
+	bool "NXP UDA1334 handler"
+	depends on TOMTOM_NASHVILLE_SCENARI
+	depends on SND_SOC_UDA1334
+	help
+	  Handler for the NXP codec in the UDA1334 PMIC family
+
+endif # TOMTOM_NASHVILLE
+

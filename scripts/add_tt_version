@@ -1,0 +1,59 @@
+#! /bin/bash -e
+
+CECHO=$(dirname $0)/cecho
+
+# shamelessly copied from elsewhere
+die() {
+	$CECHO red "`basename $0`: ERROR: $1" >&2
+	exit 1
+}
+
+
+
+# shamelessly copied from elsewhere
+get_current_p4_changelist() {
+        p4root=$1
+	if ! p4out=$(p4 opened -m 1 ${p4root}/... 2>&1); then
+		die "Perforce command 'p4 opened -m 1 ...' failed: ${p4out}"
+	fi
+	if ! echo "${p4out}" \
+		| grep -Fq "... - file(s) not opened on this client.";
+	then
+		dirty="y"
+	else
+		dirty="n"
+	fi
+	if ! p4out=$(p4 changes -m 1 -s submitted ${p4root}/...#have 2>&1);
+	then
+		die "Perforce command 'p4 changes' failed: ${p4out}"
+	fi
+	mincl=$(echo "${p4out}" | awk '{print $2}')
+	found=0
+	VERSION=$(p4 changes -s submitted ${p4root}/...|awk '{a[i++]=$2} END {for (j=i-1; j>=0;) print a[j--] }'| while  read a
+		do
+			if [ $a -lt ${mincl} ]
+			then
+				continue
+			fi
+			if [ ${found} -gt 0 ]
+			then
+				$CECHO yellow "NOTE: Your workspace is missing one or more changes" >&2
+				break
+			fi
+			if p4 sync -n ${p4root}/...@${a} 2>&1| grep -Fq "...@${a} - file(s) up-to-date."
+			then
+				found=$a
+				echo $a
+			fi
+		done )
+	if [ -z ${VERSION} ] ; then VERSION="unknown-changelist"; fi
+	if test "${dirty}" = "y";
+	then
+		VERSION="${VERSION}-$(whoami)"
+	fi
+}
+
+# echo "Retrieving version information from Perforce..." >&2
+P4CL=$(p4 client -o)
+get_current_p4_changelist $(echo "${P4CL}" |grep '^Root:' |sed "s/^Root:\s*//g")
+echo CONFIG_TOMTOM_VERSION=\"$VERSION\" >> .config

@@ -1,0 +1,47 @@
+# drivers/tomtom/gps/Kconfig
+#
+# Backlight & LCD drivers configuration
+#
+#
+# Copyright (C) 2008 TomTom BV <http://www.tomtom.com/>
+# Author: Benoit Leffray <benoit.leffray@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+menuconfig TOMTOM_GPS
+	default y
+	depends on TOMTOM_DRIVERS
+	bool "TomTom GPS Support"
+	---help---
+          This option enables support for GPS devices.
+
+config TOMTOM_GPS_CLASS_DEVICE
+	default y
+	depends on TOMTOM_GPS
+	tristate "Low-Level TomTom GPS controls"
+	help
+		This framework adds support for low-level control of GPS.
+		Some GPS devices connect to platform-specific GPS modules
+		in order to have a platform-specific way to control the 
+		GPS hardware.
+
+		To have support for your specific GPS device you will have to
+		select the proper drivers which depend on this option.
+
+config TOMTOM_GPS_GENERIC_DRIVER
+	default m
+	depends on TOMTOM_GPS_CLASS_DEVICE
+	tristate "TomTom Generic GPS Driver"
+	help
+		TomTom generic support for GPS
+
+config TOMTOM_GPS_BCM4760
+	default y
+	depends on TOMTOM_GPS_CLASS_DEVICE && PLAT_BCM476X
+	tristate "Broadcom BCM4760 GPS"
+	help
+	  If you have a BCM4760 GPS device then say y|m to include
+	  a GPS driver for it.
+

@@ -1,0 +1,30 @@
+# drivers/tomtom/gprs/Kconfig
+#
+# Copyright (C) 2008 TomTom BV <http://www.tomtom.com/>
+# Author: Niels Langendorff <niels.langendorff@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+menuconfig TOMTOM_GPRS
+	default n
+	depends on TOMTOM_DRIVERS
+	bool "TomTom GPRS drivers"
+	---help---
+          This option enables support for GPRS modems.
+
+config TOMTOM_GPRS_GENERIC
+	default m
+	depends on TOMTOM_GPRS
+	tristate "Enable GPRS support"
+	help
+	  Support for GPRS modem.
+
+config TOMTOM_GPRS_FARO
+	default m
+	depends on TOMTOM_GPRS_GENERIC
+	tristate "Enable FARO support"
+	help
+	  Support for FARO GPRS modem.
+

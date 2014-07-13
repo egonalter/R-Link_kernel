@@ -1,0 +1,308 @@
+# drivers/tomtom/Kconfig
+#
+# Copyright (C) 2008 TomTom BV <http://www.tomtom.com/>
+# Author: Kees Jongenburger <kees.jongenburger@tomtom.com>
+# Author: Vincent Ruitenberg <Vincent.Rui@tomtom.com>
+# Author: Niels Langendorff <niels.langendorff@tomtom.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+config TOMTOM_DEVICE
+       bool
+
+config TOMTOM_PND
+       bool
+       select TOMTOM_DEVICE
+
+config TOMTOM_AUTOMOTIVE
+       bool
+       select TOMTOM_DEVICE
+
+menu "TomTom specific drivers"
+
+config TOMTOM_DRIVERS
+	bool "Enable TomTom specific drivers."
+	default y
+	depends on PLAT_TOMTOM
+	help
+	  The TomTom specific drivers in the kernel perform
+	  functions only useful on TomTom hardware.
+
+config TOMTOM_MEM
+	tristate "Enable /dev/mem protection."
+	default m
+	depends on PLAT_TOMTOM && STRICT_DEVMEM
+	
+
+config TOMTOM_APPLE_AUTH
+	tristate "Apple authentication chip support"
+	depends on SPI && SPI_SPIDEV || I2C && I2C_CHARDEV
+	default n
+	help
+	  This is a small driver that initializes the apple chip properly so that
+	  user space can communicate with it using spidev device node or i2c character
+	  device.
+
+config TOMTOM_BLUETOOTH_MODE
+	tristate "Bluetooth mode driver via sysfs"
+	depends on SYSFS && TOMTOM_DRIVERS
+	default n
+	help
+	  This is a cleanroom implementation of the extensions that used to reside in the
+	  GPIO driver in the Barcelona era. Via sysfs this driver can be used to signal
+	  the bluetooth chip to switch to a specific mode and to reset it.
+
+config TOMTOM_FACTORYDATA_EXPORT_DRIVER
+	tristate "Build module for exporting factory data through sysfs"
+	default m
+	depends on SYSFS && TOMTOM_DRIVERS && TOMTOM_FACTORYDATA 
+	help
+	  TomTom specific driver that exports the factory data 
+	  to a sysfs file tree.
+
+config TOMTOM_FLIPFLOP
+	tristate "FlipFlop driver"
+	default m
+	depends on TOMTOM_DRIVERS
+	help
+	  TomTom specific flipflop driver.
+
+config TOMTOM_FLIPFLOP_HW
+	tristate "FlipFlop driver / HW implementation"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+	  Flip-flop driver using real HW. Temporary option.
+
+config TOMTOM_ACTIVE_DOCK
+	tristate "Support for TomTom Active Dock"
+	default m
+	depends on TOMTOM_DRIVERS
+	help
+	  Implements support for Active Docks as used for Cagliari & later.
+
+config TOMTOM_SI4711
+	tristate "Support for SI4711 FM transmitter"
+	default m
+	depends on TOMTOM_DRIVERS
+	help
+	  Enable support for TomTom SI4711 FM transmitter
+
+config TOMTOM_GADC
+	bool "Support for General ADC"
+	default y
+	depends on TOMTOM_DRIVERS
+	help
+	  Enable support for TomTom General ADC
+
+config TOMTOM_GADC_TITAN2
+	tristate "Support for General ADC for Titan2 ADC"
+	default m
+	depends on ARCH_SIRFSOC && TOMTOM_GADC
+	help
+	  Enable support for Titan2 ADC using GADC
+
+config TOMTOM_GADC_GENERIC
+	tristate "Support for General ADC Generic"
+	default m
+	depends on TOMTOM_GADC
+	help
+	  Enable support for Generic implementation of the ADC user interface driver
+
+config TOMTOM_SCP1000
+	tristate "Support for SCP1000 pressure sensor"
+	default y
+	depends on TOMTOM_DRIVERS && TOMTOM_GADC
+	help
+	  Enable support for TomTom SCP1000 pressure sensor
+
+config TOMTOM_POWER_BUTTON
+	bool "Support for power button"
+	default y
+	depends on TOMTOM_DRIVERS
+	help
+	  Enable support for TomTom power button
+
+config TOMTOM_TPS851
+	tristate "Support TPS851 ADC lightsensor"
+	default m
+	depends on TOMTOM_DRIVERS
+	help
+	  Enable support for TPS851 Lightsensor
+
+config TOMTOM_USBMODE
+	tristate "Legacy USB mode detect and set"
+	depends on TOMTOM_DRIVERS
+	default n
+	help
+	  This option enables the TomTom specific USB
+	  mode switching between usb host and function
+
+config TOMTOM_USB_MODE_LITE
+	tristate "USB charger detection and OTG mode switching"
+	depends on TOMTOM_DRIVERS
+	default n
+	help
+	  This option enables the TomTom specific USB
+	  charger detection and OTG mode switching
+
+config TOMTOM_USBMODE_DUMMY
+	tristate "Legacy USB mode detect and set dummy implementation"
+	depends on TOMTOM_USBMODE && TOMTOM_DRIVERS
+	default n
+	help
+	  This is a dummy low-level usbmode driver which allows usbmode events
+	  to be forced through sysfs. Does not interact with USB hardware.
+
+config TOMTOM_USBMODE_SIRFSOC
+	tristate "Legacy USB mode detect and set implementation for sirfsoc"
+	depends on TOMTOM_USBMODE &&  TOMTOM_DRIVERS && ARCH_SIRFSOC
+	default y if ARCH_SIRFSOC
+
+config TOMTOM_USBMODE_S3C64XX
+	tristate "Legacy USB mode detect and set implementation for s3c64xx"
+	depends on TOMTOM_USBMODE &&  TOMTOM_DRIVERS && TOMTOM_VBUSMON && PLAT_S3C64XX
+	default y if PLAT_S3C64XX
+
+config TOMTOM_USBMODE_SYNAP_LL_LIGHT
+	tristate "Legacy USB mode detect and set implementation for Synaptics OTG core devices"
+	depends on TOMTOM_USBMODE &&  TOMTOM_DRIVERS && TOMTOM_VBUSMON && (ARCH_BCM4760 || PLAT_S3C64XX || PLAT_MENDOZA)
+	default y if (ARCH_BCM4760 || PLAT_MENDOZA)
+	help
+	  This option enables USBMode support for Synaptics OTG core devices.
+
+config TOMTOM_VBUSMON
+	tristate "Legacy USB vbus detect"
+	depends on TOMTOM_DRIVERS && (PLAT_MENDOZA || ARCH_BCM4760)
+	default y
+	help
+	  This driver enables an interrupt on the USB vbus power, connected
+	  via a GPIO pin.
+
+config TOMTOM_USB_PSUPPLY
+	tristate "USB power supply support"
+	depends on TOMTOM_DRIVERS
+	default n
+	help
+		This driver adds a USB OTG based power supply to the system. It also
+		enables fast charging when an Accessory Charger Adapter (ACA) is connected
+		to the OTG port
+
+config TOMTOM_SI4703
+	tristate "Support for SI4703 RDS/TMC receiver"
+	default m
+	depends on I2C && TOMTOM_DRIVERS && TOMTOM_ACTIVE_DOCK
+	help
+	  Enable support for the TomTom SI4703 FM receiver.
+
+config TOMTOM_VBUSMON_BCM59040_USBSTAT
+	tristate "BCM59040 USBSTAT Override VBus / Host / Device detection workaround"
+	depends on TOMTOM_VBUSMON && PMU_DEVICE_BCM59040 && ARCH_BCM4760
+	default y if ARCH_BCM4760
+	help
+	  This implementation works around the problem where either the USBSTAT lines, the PMU_ID_OUT line or both are missing.
+	  The VBUS/Host/Device mode detection comes from PMU interrupts and requires the PMU bus implementation.
+
+config TOMTOM_LOW_DC_VCC
+	tristate "Support for the low battery Voltage detector (LOW_DC_VCC)"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+	  Enable detection of low_dc_vcc which lets the unit suspend if detected.
+
+config TOMTOM_USBMODE_QUICKCHANGES
+    bool
+	depends on TOMTOM_VBUSMON && TOMTOM_USBMODE
+	default n
+	help
+	  Hack for USBMODE to work on Samsung platforms. This is needed when switching usbmode states takes a long time
+	  relative to the change rate of the VBUS.
+
+config TOMTOM_PPS_DRIVER
+	default n
+	depends on TOMTOM_DRIVERS && PPS
+	tristate "PPS driver"
+	help
+	  Provides support for 1PPS (Pulse-Per-Second) through the LinuxPPS subsystem.
+
+config TOMTOM_BCM2070
+	depends on TOMTOM_DRIVERS && SND_BCM2070
+	bool "BCM2070 driver"
+	default y if SND_BCM2070=y
+	default y if SND_BCM2070=m
+	help
+	  Provides support for BCM2070
+
+config TOMTOM_BCM4329
+	default n
+	depends on TOMTOM_DRIVERS && BCM4329
+	bool "BCM4329 driver"
+	help
+	  Provides support for BCM4329
+
+config TOMTOM_BCM4330_WIFI
+	default n
+	depends on TOMTOM_DRIVERS && BCM4330
+	bool "BCM4330 driver"
+	help
+	  Provides support for BCM4330
+
+config TOMTOM_BATTERY_BQ27x00
+	default n
+	depends on TOMTOM_DRIVERS && BATTERY_BQ27x00
+	bool "BQ27x00 driver"
+	help
+	  Provides support for BQ27x00
+
+config TOMTOM_TOUCHSCREEN_CYTTSP
+	default n
+	depends on TOMTOM_DRIVERS && TOUCHSCREEN_CYTTSP
+	bool "CYTTSP driver"
+	help
+	  Provides support for touchscreen CYTTSP
+
+config TOMTOM_PMIC_STRASBOURG
+	default n
+	depends on TOMTOM_DRIVERS
+	bool "PMIC strasbourg init driver"
+	help
+	  Provides PMIC init functions for Strasbourg
+
+config TOMTOM_TILT_TS0001_L
+	tristate "Tilt sensor driver for TS0001-L"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+	  Enable detection of tilt.
+
+config TOMTOM_SUICIDE_ALARM
+	tristate "TomTom suicide alarm"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+	  Allows to set a time interval after which the device will suicide
+	  
+source "drivers/tomtom/sensors/ms5607/Kconfig"
+
+source "drivers/tomtom/sensors/kxr94/Kconfig"
+
+source "drivers/tomtom/sensors/ewts98/Kconfig"
+
+source "drivers/tomtom/gprs/Kconfig"
+
+source "drivers/tomtom/gps/Kconfig"
+
+source "drivers/tomtom/pmic/Kconfig"
+
+source "drivers/tomtom/battery/Kconfig"
+
+source "drivers/tomtom/sound/Kconfig"
+
+source "drivers/tomtom/idpinmon/Kconfig"
+
+source "drivers/tomtom/can_micro/Kconfig"
+
+endmenu
+

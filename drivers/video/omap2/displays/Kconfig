@@ -1,0 +1,85 @@
+menu "OMAP2/3 Display Device Drivers"
+        depends on OMAP2_DSS
+
+config PANEL_GENERIC
+        tristate "Generic Panel"
+        help
+	  Generic panel driver.
+	  Used for DVI output for Beagle and OMAP3 SDP.
+
+config PANEL_SAMSUNG_LTE430WQ_F0C
+        tristate "Samsung LTE430WQ-F0C LCD Panel"
+        depends on OMAP2_DSS
+        help
+          LCD Panel used on Overo Palo43
+
+config PANEL_SHARP_LS037V7DW01
+        tristate "Sharp LS037V7DW01 LCD Panel"
+        depends on OMAP2_DSS
+        help
+          LCD Panel used in TI's SDP3430 and EVM boards
+
+config PANEL_PICO_DLP
+	tristate "OMAP PICO DLP Panel"
+	depends on OMAP2_DSS
+	help
+	LCD Panel used in TI's SDP4430 and EVM boards
+
+config PANEL_TAAL
+        tristate "Taal DSI Panel"
+        depends on OMAP2_DSS_DSI
+        help
+          Taal DSI command mode panel from TPO.
+
+config PANEL_SHOLES
+        tristate "Sholes Panel"
+        help
+	  LCD Panel used in sholes
+
+config LCD_4430SDP
+        tristate "OMAP4 LCD Panel"
+        help
+          LCD Panel used in OMAP4
+
+config PANEL_NEC
+	tristate "NEC Panel"
+	help
+		LCD Panel used in the Zoom board
+
+config PANEL_SIL9022
+	tristate "HDMI interface"
+	help
+		HDMI interface used in the Zoom board
+
+config PANEL_SAMSUNG_LMS700KF19
+	tristate "Samsung LMS700KF19 Panel"
+	depends on OMAP2_DSS
+	help 
+		Samsung LMS700KF19 Panel
+
+config PANEL_SAMSUNG_LMS500HF04
+	tristate "Samsung LMS500HF04 Panel"
+	depends on OMAP2_DSS
+	help 
+		Samsung LMS500HF04 Panel
+
+config PANEL_SAMSUNG_LMS501KF03
+	tristate "Samsung LMS501KF03 Panel"
+	depends on OMAP2_DSS
+	help 
+		Samsung LMS501KF03 Panel
+
+
+config PANEL_CMO_G070Y2L01
+	tristate "Chi Mei Optoelectronics G070Y2-L01 Panel"
+	depends on OMAP2_DSS
+	help 
+		Chi Mei Optoelectronics G070Y2-L01 Panel
+
+config PANEL_LG_LD050WV1SP01
+	tristate "LG LD050WV1-SP01 Panel"
+	depends on (OMAP2_DSS && SPI_MASTER)
+	help 
+		LG LD050WV1-SP01 Panel
+
+endmenu
