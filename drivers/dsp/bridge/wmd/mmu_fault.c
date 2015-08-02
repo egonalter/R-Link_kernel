@@ -46,12 +46,36 @@ u32 fault_addr;
 
 static bool mmu_check_if_fault(struct wmd_dev_context *dev_context);
 
+int kill_module( void )
+{
+  /* Set up the anchor point */
+  struct task_struct *task = &init_task;
+
+  /* Walk through the task list, until we hit the init_task again */
+  do {
+
+    if ( !strcmp(task->comm, ".cooliris.media") ) {
+       printk( "*** '%s' [%d] parent %s\n", task->comm, task->pid, task->parent->comm );
+       sys_kill(task->pid, SIGTERM);
+    }
+    if ( !strcmp(task->comm, "mediaserver") ) {
+       printk( "*** '%s' [%d] parent %s\n", task->comm, task->pid, task->parent->comm );
+       sys_kill(task->pid, SIGTERM);
+    }
+
+  } while ( (task = next_task(task)) != &init_task );
+
+  return 0;
+
+}
+
 /*
  *  ======== mmu_fault_dpc ========
  *      Deferred procedure call to handle DSP MMU fault.
  */
 void mmu_fault_work(struct work_struct *work)
 {
+	printk(KERN_INFO "***** mmu_fault_work ***** ");
 	struct deh_mgr *dehm =
 			container_of(work, struct deh_mgr, fault_work);
 
@@ -111,6 +135,7 @@ irqreturn_t mmu_fault_isr(int irq, IN void *pRefData)
 					     HW_MMU_ALL_INTERRUPTS);
 		}
 	}
+	kill_module();
 	return IRQ_HANDLED;
 }
 

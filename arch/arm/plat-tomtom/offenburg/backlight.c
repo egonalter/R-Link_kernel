@@ -47,6 +47,8 @@ struct omap_pwm_device {
 	atomic_t cached_match_val;
 	struct completion irq_done;
 
+	struct work_struct timer_match_work;
+
 	/* suspend/resume state */
 	u32 timer_ctrl_reg;
 	u32 timer_match_reg;
@@ -201,16 +203,30 @@ static inline void omap_pwm_set_match(struct omap_dm_timer *timer, unsigned int 
 static irqreturn_t intensity_timer_match_interrupt(int irq, void *_pwm)
 {
 	struct omap_pwm_device *pwm = _pwm;
-	unsigned int counter;
-	unsigned int match_val;
-	unsigned int current_match_val;
 	unsigned int status;
-	unsigned int updated=0;
-	match_val = atomic_read(&pwm->cached_match_val);
 
 	/* get int status */
 	omap_dm_timer_enable(pwm->dm_timer);
 	status = omap_dm_timer_read_status(pwm->dm_timer);
+
+	/* acknowledge interrupts */
+	omap_dm_timer_write_status(pwm->dm_timer, status);
+
+	schedule_work(&pwm->timer_match_work);
+	return IRQ_HANDLED;
+}
+
+static void omap_pwm_timer_match_work(struct work_struct *work)
+{
+	struct omap_pwm_device *pwm;
+	unsigned int counter;
+	unsigned int match_val;
+	unsigned int current_match_val;
+	unsigned int updated=0;
+
+	pwm = container_of(work, struct omap_pwm_device, timer_match_work);
+
+	match_val = atomic_read(&pwm->cached_match_val);
 
 	/* get current match value */
 	current_match_val = omap_dm_timer_get_match(pwm->dm_timer);
@@ -237,13 +253,8 @@ static irqreturn_t intensity_timer_match_interrupt(int irq, void *_pwm)
 		updated = 1;
 	}
 
-	/* acknowledge interrupts */
-	omap_dm_timer_write_status(pwm->dm_timer, status);
-
 	if (updated)
 		complete(&pwm->irq_done);
-
-	return IRQ_HANDLED;
 }
 
 static int omap_pwm_init(struct omap_pwm_device *pwm)
@@ -265,6 +276,8 @@ static int omap_pwm_init(struct omap_pwm_device *pwm)
 	 */
 	clk_disable(omap_dm_timer_get_fclk(pwm->dm_timer));
 
+	INIT_WORK(&pwm->timer_match_work, omap_pwm_timer_match_work);
+
 	/* register timer match and overflow interrupts */
 	err = request_irq(omap_dm_timer_get_irq(pwm->dm_timer),
 			intensity_timer_match_interrupt,
@@ -284,7 +297,6 @@ static int omap_pwm_config(struct omap_pwm_device *pwm, enum led_brightness brig
 	int status = 0;
 	int load_value, match_value, duty_ns;
 	unsigned long clk_rate;
-	int err;
 	unsigned int match_val;
 	unsigned int current_match_val;
 

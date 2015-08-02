@@ -1505,7 +1505,6 @@ static int omap2_mcspi_suspend(struct platform_device *pdev, pm_message_t messag
 		if (mcspi->slave_buffered_device)
 			omap2_mcspi_stop_slave_dma(mcspi->slave_buffered_device);
 		mcspi_write_reg(master, OMAP2_MCSPI_CHCTRL0, 0);
-		omap2_mcspi_set_master_mode (master);
 		omap2_mcspi_disable_clocks(mcspi);
 	}
 
@@ -1532,8 +1531,6 @@ static int omap2_mcspi_resume(struct platform_device *pdev)
 			l = mcspi_read_reg(master, OMAP2_MCSPI_CHSTAT0);
 		}
 
-		/* Enable channel and interrupts */
-		omap2_mcspi_set_slave_mode (master);
 		mcspi_write_reg(master, OMAP2_MCSPI_CHCTRL0, OMAP2_MCSPI_CHCTRL_EN);
 		if (mcspi->slave_buffered_device)
 			omap2_mcspi_start_slave_dma(mcspi->slave_buffered_device);

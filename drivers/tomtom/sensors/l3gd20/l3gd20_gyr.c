@@ -209,6 +209,7 @@ struct l3gd20_gyr_status {
 	int hw_initialized;
 	atomic_t enabled;
 	int use_smbus;
+	int on_before_suspend;
 
 	u8 reg_addr;
 	u8 resume_state[RESUME_ENTRIES];
@@ -828,9 +829,12 @@ static int l3gd20_gyr_disable(struct l3gd20_gyr_status *stat)
 
 	if (atomic_cmpxchg(&stat->enabled, 1, 0)) {
 
+		if (stat->polling_enabled) {
+			cancel_work_sync(&stat->polling_task);
+			hrtimer_cancel(&stat->hr_timer);
+			dev_dbg(&stat->client->dev, "%s: cancel_hrtimer ", __func__);
+		}
 		l3gd20_gyr_device_power_off(stat);
-		hrtimer_cancel(&stat->hr_timer);
-		dev_dbg(&stat->client->dev, "%s: cancel_hrtimer ", __func__);
 	}
 	return 0;
 }
@@ -1016,6 +1020,7 @@ static ssize_t attr_polling_mode_store(struct device *dev,
 		}
 	} else {
 		if (stat->polling_enabled) {
+			cancel_work_sync(&stat->polling_task);
 			hrtimer_cancel(&stat->hr_timer);
 		}
 		stat->polling_enabled = false;
@@ -1298,26 +1303,11 @@ static int l3gd20_gyr_suspend(struct i2c_client *client, pm_message_t mesg)
 	int err = 0;
 #ifdef CONFIG_PM
 	struct l3gd20_gyr_status *stat = i2c_get_clientdata(client);
-	u8 buf[2];
-
+	
 	dev_info(&client->dev, "suspend\n");
-
-	dev_dbg(&client->dev, "%s\n", __func__);
-	if (atomic_read(&stat->enabled)) {
-		mutex_lock(&stat->lock);
-		if (stat->polling_enabled) {
-			dev_info(&stat->client->dev, "polling mode disabled\n");
-			hrtimer_cancel(&stat->hr_timer);
-		}
-#ifdef SLEEP
-		err = l3gd20_gyr_register_update(stat, buf, CTRL_REG1,
-				0x0F, (ENABLE_NO_AXES | PM_NORMAL));
-#else
-		err = l3gd20_gyr_register_update(stat, buf, CTRL_REG1,
-				0x08, PM_OFF);
-#endif /*SLEEP*/
-		mutex_unlock(&stat->lock);
-	}
+	stat->on_before_suspend = atomic_read(&stat->enabled);
+	err = l3gd20_gyr_disable(stat);
+	
 #endif /*CONFIG_PM*/
 	return err;
 }
@@ -1327,28 +1317,11 @@ static int l3gd20_gyr_resume(struct i2c_client *client)
 	int err = 0;
 #ifdef CONFIG_PM
 	struct l3gd20_gyr_status *stat = i2c_get_clientdata(client);
-	u8 buf[2];
-
 
 	dev_info(&client->dev, "resume\n");
+	if (stat->on_before_suspend)
+		err = l3gd20_gyr_enable(stat);
 
-	dev_dbg(&client->dev, "%s\n", __func__);
-	if (atomic_read(&stat->enabled)) {
-		mutex_lock(&stat->lock);
-		if (stat->polling_enabled) {
-			dev_info(&stat->client->dev, "polling mode enabled\n");
-			hrtimer_start(&stat->hr_timer, stat->ktime, HRTIMER_MODE_REL);
-		}
-#ifdef SLEEP
-		err = l3gd20_gyr_register_update(stat, buf, CTRL_REG1,
-				0x0F, (ENABLE_ALL_AXES | PM_NORMAL));
-#else
-		err = l3gd20_gyr_register_update(stat, buf, CTRL_REG1,
-				0x08, PM_NORMAL);
-#endif
-		mutex_unlock(&stat->lock);
-
-	}
 #endif /*CONFIG_PM*/
 	return err;
 }
@@ -1505,7 +1478,8 @@ static void poll_function_work(struct work_struct *polling_task)
 		}
 	}
 
-	hrtimer_start(&stat->hr_timer, stat->ktime, HRTIMER_MODE_REL);
+	if (stat->polling_enabled && atomic_read(&stat->enabled))
+		hrtimer_start(&stat->hr_timer, stat->ktime, HRTIMER_MODE_REL);
 }
 
 enum hrtimer_restart poll_function_read(struct hrtimer *timer)

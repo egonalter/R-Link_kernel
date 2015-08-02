@@ -295,6 +295,18 @@
 /* Samsung products */
 #define SAMSUNG_VENDOR_ID			0x04e8
 
+/* Sony mobile products */
+#define SONY_VENDOR_ID				0x0fce
+
+/* LG phone products */
+#define LG_VENDOR_ID				0x043e
+
+/* Panasonic products */
+#define PANASONIC_VENDOR_ID			0x04da
+
+/* HTC products */
+#define HTC_VENDOR_ID				0x0bb4
+
 #define USB_DEVICE_VEND(vend) \
 	.match_flags = USB_DEVICE_ID_MATCH_VENDOR, \
 	.idVendor = (vend)
@@ -776,8 +788,11 @@ struct usb_device_id usbhost_whitelist_table [] = {
 	{ USB_DEVICE(0x045e, 0x04ec), }, /* HTC Titan x310 */
 
 	/* MirrorLink */
+	{ USB_DEVICE_VEND(HTC_VENDOR_ID), },
 	{ USB_DEVICE_VEND(NOKIA_VENDOR_ID), },
-	{ USB_DEVICE_VEND(SAMSUNG_VENDOR_ID), },
+	{ USB_DEVICE_VEND(SONY_VENDOR_ID), },
+	{ USB_DEVICE_VEND(LG_VENDOR_ID), },
+	{ USB_DEVICE_VEND(PANASONIC_VENDOR_ID), },
 
 	{ USB_INTERFACE_INFO(USB_CLASS_COMM,
 		USB_CDC_SUBCLASS_NCM, USB_CDC_PROTO_NONE), },

@@ -64,8 +64,8 @@
 #define USB_CDC_NCM_NDP16_LENGTH_MIN		0x10
 
 /* Maximum NTB length */
-#define	CDC_NCM_NTB_MAX_SIZE_TX			32768	/* bytes */
-#define	CDC_NCM_NTB_MAX_SIZE_RX			32768	/* bytes */
+#define	CDC_NCM_NTB_MAX_SIZE_TX			(9216)	/* bytes */
+#define	CDC_NCM_NTB_MAX_SIZE_RX			(9216)	/* bytes */
 
 /* Minimum value for MaxDatagramSize, ch. 6.2.9 */
 #define	CDC_NCM_MIN_DATAGRAM_SIZE		1514	/* bytes */
@@ -443,6 +443,7 @@ size_err:
 			/* if value changed, update device */
 			if (ctx->max_datagram_size !=
 					le16_to_cpu(*max_datagram_size)) {
+				*max_datagram_size = cpu_to_le16(ctx->max_datagram_size);
 				err = usb_control_msg(ctx->udev,
 						usb_sndctrlpipe(ctx->udev, 0),
 						USB_CDC_SET_MAX_DATAGRAM_SIZE,
@@ -757,7 +758,7 @@ cdc_ncm_fill_tx_frame(struct cdc_ncm_ctx *ctx, struct sk_buff *skb)
 
 	} else {
 		/* reset variables */
-		skb_out = alloc_skb((ctx->tx_max + 1), GFP_ATOMIC);
+		skb_out = alloc_skb((ctx->tx_max + 1), GFP_ATOMIC | __GFP_NOWARN);
 		if (skb_out == NULL) {
 			if (skb != NULL) {
 				dev_kfree_skb_any(skb);
@@ -989,6 +990,8 @@ static void cdc_ncm_txpath_bh(unsigned long param)
 		netif_tx_lock_bh(ctx->netdev);
 		usbnet_start_xmit(NULL, ctx->netdev);
 		netif_tx_unlock_bh(ctx->netdev);
+	} else {
+		spin_unlock_bh(&ctx->mtx);
 	}
 }
 

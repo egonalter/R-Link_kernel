@@ -23,6 +23,7 @@
 #include <linux/spinlock.h>
 #include <linux/sysdev.h>
 #include <linux/wakelock.h>
+#include <linux/earlysuspend.h>
 
 #define ANDROID_ALARM_PRINT_ERROR (1U << 0)
 #define ANDROID_ALARM_PRINT_INIT_STATUS (1U << 1)
@@ -365,7 +366,11 @@ static void alarm_triggered_func(void *p)
 	wake_lock_timeout(&alarm_rtc_wake_lock, 1 * HZ);
 }
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+static void alarm_suspend(struct early_suspend *h)
+#else
 static int alarm_suspend(struct platform_device *pdev, pm_message_t state)
+#endif
 {
 	int                 err = 0;
 	unsigned long       flags;
@@ -378,8 +383,11 @@ static int alarm_suspend(struct platform_device *pdev, pm_message_t state)
 	struct alarm_queue *wakeup_queue = NULL;
 	struct alarm_queue *tmp_queue = NULL;
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	printk(KERN_DEBUG "Alarm driver entering early suspend");
+#else
 	pr_alarm(SUSPEND, "alarm_suspend(%p, %d)\n", pdev, state.event);
-
+#endif
 	spin_lock_irqsave(&alarm_slock, flags);
 	suspended = true;
 	spin_unlock_irqrestore(&alarm_slock, flags);
@@ -433,7 +441,12 @@ static int alarm_suspend(struct platform_device *pdev, pm_message_t state)
 			spin_unlock_irqrestore(&alarm_slock, flags);
 		}
 	}
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	if (err)
+		printk(KERN_WARNING "%s encountered error: %d", __func__, err);
+#else
 	return err;
+#endif
 }
 
 static int alarm_resume(struct platform_device *pdev)
@@ -514,12 +527,20 @@ static struct class_interface rtc_alarm_interface = {
 };
 
 static struct platform_driver alarm_driver = {
+#ifndef CONFIG_HAS_EARLYSUSPEND
 	.suspend = alarm_suspend,
+#endif
 	.resume = alarm_resume,
 	.driver = {
 		.name = "alarm"
 	}
 };
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+struct early_suspend alarm_early_suspend  = {
+	.suspend = alarm_suspend
+};
+#endif
 
 static int __init alarm_late_init(void)
 {
@@ -563,6 +584,10 @@ static int __init alarm_driver_init(void)
 	err = class_interface_register(&rtc_alarm_interface);
 	if (err < 0)
 		goto err2;
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+	register_early_suspend(&alarm_early_suspend);
+#endif
 
 	return 0;
 

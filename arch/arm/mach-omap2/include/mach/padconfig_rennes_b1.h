@@ -314,7 +314,7 @@
 	/* MCSPI1 lines */                                                                                     \
 	PC_DEFINE(CP(MCSPI1_CLK),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_CLK */  \
 	PC_DEFINE(CP(MCSPI1_SIMO),   PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_SIMO */ \
-	PC_DEFINE(CP(MCSPI1_SOMI),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* SPI_CAN_SOMI */     \
+	PC_DEFINE(CP(MCSPI1_SOMI),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_SOMI */     \
 	PC_DEFINE(CP(MCSPI1_CS0),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_CS0 */  \
                                                                                                                \
 	/* SYS lines */                                                                                        \

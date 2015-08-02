@@ -317,6 +317,7 @@ static inline void omap_init_sti(void) {}
 
 static struct omap2_mcspi_platform_config omap2_mcspi1_config = {
 	.num_cs		= 4,
+	.mode		= OMAP2_MCSPI_SLAVE,
 	.force_cs_mode	= 1,
 	.fifo_depth	= 15,
 	.dma_mode	= 0,

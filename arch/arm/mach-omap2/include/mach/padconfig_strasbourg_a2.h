@@ -151,20 +151,20 @@
 
 #define PADCONFIG_SETTINGS_KERNEL       \
 	/* UART1 lines */                                                                                      \
-	PC_DEFINE(CP(UART1_CTS),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* GPS_RTS_SOC_CTS */  \
-	PC_DEFINE(CP(UART1_RTS),     PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* GPS_CTS_SOC_RTS */  \
-	PC_DEFINE(CP(UART1_RX),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* GPS_TX_SOC_RX */    \
-	PC_DEFINE(CP(UART1_TX),      PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* GPS_RX_SOC_TX */    \
+	PC_DEFINE(CP(UART1_CTS),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_RTS_SOC_CTS */  \
+	PC_DEFINE(CP(UART1_RTS),     PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_CTS_SOC_RTS */  \
+	PC_DEFINE(CP(UART1_RX),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_TX_SOC_RX */    \
+	PC_DEFINE(CP(UART1_TX),      PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_RX_SOC_TX */    \
                                                                                                                \
 	/* UART2 lines */                                                                                      \
-	PC_DEFINE(CP(MCBSP3_CLKX),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | OMAP_PIN_OFF_OUTPUT_LOW) /* BT_RX */            \
-	PC_DEFINE(CP(MCBSP3_FSX),    PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE1 | OMAP_PIN_OFF_OUTPUT_LOW) /* BT_TX */            \
+	PC_DEFINE(CP(MCBSP3_CLKX),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | PC_OFF_OUT_LOW) /* BT_RX */            \
+	PC_DEFINE(CP(MCBSP3_FSX),    PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE1 | PC_OFF_OUT_LOW) /* BT_TX */            \
                                                                                                                \
 	/* MCBSP1 lines */                                                                                     \
-	PC_DEFINE(CP(MCBSP1_CLKX),   PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* BT_PCM_CLK */       \
-	PC_DEFINE(CP(MCBSP1_DR),     PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* BT_PCM_OUT */       \
-	PC_DEFINE(CP(MCBSP1_DX),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* BT_PCM_IN  */       \
-	PC_DEFINE(CP(MCBSP1_FSX),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW) /* BT_PCM_SYNC */      \
+	PC_DEFINE(CP(MCBSP1_CLKX),   PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* BT_PCM_CLK */       \
+	PC_DEFINE(CP(MCBSP1_DR),     PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* BT_PCM_OUT */       \
+	PC_DEFINE(CP(MCBSP1_DX),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* BT_PCM_IN  */       \
+	PC_DEFINE(CP(MCBSP1_FSX),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* BT_PCM_SYNC */      \
 	                                                                                                       \
 	/* USB1 lines */                                                                                       \
 	PC_DEFINE(CP(ETK_D0),        PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE3) /* MM1_RXRCV */        \
@@ -214,14 +214,14 @@
 	PC_DEFINE(CP(JTAG_TDO),      PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0) /* uP_TDO */           \
                                                                                                            \
 	/* GPIO lines */                                                                                       \
-	PC_DEFINE(CP(CAM_WEN),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* GPS_CORE_PWR_EN */  \
-	PC_DEFINE(CP(CAM_XCLKA),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* CAM_PWR_ON */       \
-	PC_DEFINE(CP(SDMMC2_DAT1),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* nCAM_RST */         \
-	PC_DEFINE(CP(GPMC_NBE0_CLE), PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* nBT_RST */          \
-	PC_DEFINE(CP(MCBSP_CLKS),    PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* nGPS_RESET */       \
-	PC_DEFINE(CP(UART3_RTS_SD),  PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* GPS_HOST_REQ */     \
-	PC_DEFINE(CP(GPIO126),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* nAUTH_RST */        \
-	PC_DEFINE(CP(GPIO129),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_LOW) /* CAM_ON */           \
+	PC_DEFINE(CP(CAM_WEN),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* GPS_CORE_PWR_EN */  \
+	PC_DEFINE(CP(CAM_XCLKA),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* CAM_PWR_ON */       \
+	PC_DEFINE(CP(SDMMC2_DAT1),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nCAM_RST */         \
+	PC_DEFINE(CP(GPMC_NBE0_CLE), PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nBT_RST */          \
+	PC_DEFINE(CP(MCBSP_CLKS),    PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nGPS_RESET */       \
+	PC_DEFINE(CP(UART3_RTS_SD),  PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* GPS_HOST_REQ */     \
+	PC_DEFINE(CP(GPIO126),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nAUTH_RST */        \
+	PC_DEFINE(CP(GPIO129),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* CAM_ON */           \
 	PC_DEFINE(CP(GPMC_NBE1),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | OMAP_PIN_OFF_OUTPUT_HIGH)/* PWR_HOLD */         \
 
 #define PADCONFIG_SETTINGS_COMMON       \
@@ -285,22 +285,22 @@
 	PC_DEFINE(CP(I2C1_SDA),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0)                        \
                                                                                                                \
 	/* MCBSP2 lines */                                                                                     \
-	PC_DEFINE(CP(MCBSP2_CLKX),   PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_INPUT_NOPULL) /* MCBSP2_CLK */       \
-	PC_DEFINE(CP(MCBSP2_DR),     PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_INPUT_NOPULL) /* MCBSP2_DR */        \
-	PC_DEFINE(CP(MCBSP2_DX),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_OUTPUT_LOW)   /* MCBSP2_DX */        \
-	PC_DEFINE(CP(MCBSP2_FSX),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | OMAP_PIN_OFF_INPUT_NOPULL) /* MCBSP2_FSX */       \
+	PC_DEFINE(CP(MCBSP2_CLKX),   PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_NOPULL) /* MCBSP2_CLK */       \
+	PC_DEFINE(CP(MCBSP2_DR),     PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_NOPULL) /* MCBSP2_DR */        \
+	PC_DEFINE(CP(MCBSP2_DX),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW)   /* MCBSP2_DX */        \
+	PC_DEFINE(CP(MCBSP2_FSX),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_NOPULL) /* MCBSP2_FSX */       \
                                                                                                                \
 	/* MCSPI1 lines */                                                                                     \
 	PC_DEFINE(CP(MCSPI1_CLK),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_CLK */  \
 	PC_DEFINE(CP(MCSPI1_SIMO),   PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_SIMO */ \
-	PC_DEFINE(CP(MCSPI1_SOMI),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* SPI_CAN_SOMI */     \
+	PC_DEFINE(CP(MCSPI1_SOMI),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_SOMI */     \
 	PC_DEFINE(CP(MCSPI1_CS0),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* SPI_CAN_CS0 */  \
                                                                                                                \
 	/* MCSPI3 lines */                                                                                     \
-	PC_DEFINE(CP(SDMMC2_CLK),    PC_INPUT   | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | OMAP_PIN_OFF_OUTPUT_LOW) /* MCSPI3_CLK */      \
-	PC_DEFINE(CP(SDMMC2_CMD),    PC_OUTPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | OMAP_PIN_OFF_OUTPUT_LOW) /* MCSPI3_SIMO */     \
-	PC_DEFINE(CP(SDMMC2_DAT0),   PC_INPUT   | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE1 | OMAP_PIN_OFF_OUTPUT_LOW) /* MCSPI3_SOMI */     \
-	PC_DEFINE(CP(SDMMC2_DAT3),   PC_OUTPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | OMAP_PIN_OFF_OUTPUT_LOW) /* MCSPI3_CS0 */      \
+	PC_DEFINE(CP(SDMMC2_CLK),    PC_INPUT   | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | PC_OFF_OUT_LOW) /* MCSPI3_CLK */      \
+	PC_DEFINE(CP(SDMMC2_CMD),    PC_OUTPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | PC_OFF_OUT_LOW) /* MCSPI3_SIMO */     \
+	PC_DEFINE(CP(SDMMC2_DAT0),   PC_INPUT   | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE1 | PC_OFF_OUT_LOW) /* MCSPI3_SOMI */     \
+	PC_DEFINE(CP(SDMMC2_DAT3),   PC_OUTPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE1 | PC_OFF_OUT_LOW) /* MCSPI3_CS0 */      \
 	                                                                                                       \
 	/* SYS lines */                                                                                        \
 	PC_DEFINE(CP(SYS_BOOT0),     PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0) /* SYS_BOOT0 */        \

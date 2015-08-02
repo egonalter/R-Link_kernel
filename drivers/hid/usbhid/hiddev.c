@@ -715,9 +715,8 @@ static long hiddev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			break;
 
 		usbhid_submit_report(hid, report, USB_DIR_IN);
-		usbhid_wait_io(hid);
-
-		r = 0;
+		/* When usb device is no longer responding, return error value after timout */
+		r = usbhid_wait_io(hid);
 		break;
 
 	case HIDIOCSREPORT:
@@ -734,9 +733,8 @@ static long hiddev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			break;
 
 		usbhid_submit_report(hid, report, USB_DIR_OUT);
-		usbhid_wait_io(hid);
-
-		r = 0;
+		/* When usb device is no longer responding, return error value after timout */
+		r = usbhid_wait_io(hid);
 		break;
 
 	case HIDIOCGREPORTINFO:
