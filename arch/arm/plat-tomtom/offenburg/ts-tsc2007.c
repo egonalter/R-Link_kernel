@@ -9,6 +9,7 @@
 #include <asm/mach-types.h>
 
 #include <plat/offenburg.h>
+#include <plat/fdt.h>
 
 static int ts_init(void)
 {
@@ -22,7 +23,7 @@ static int ts_get_pendown_state(void)
 	return !!gpio_get_value(TT_VGPIO_TP_IRQ);
 }
 
-struct tsc2007_platform_data tsc2007_info = {
+static struct tsc2007_platform_data tsc2007_info = {
 	.model			= 2007,
 	.x_plate_ohms		= 1250 /* min = 700, max = 1800 */,
 	.y_plate_ohms		= 350,
@@ -31,14 +32,40 @@ struct tsc2007_platform_data tsc2007_info = {
 	.init_platform_hw	= ts_init,
 };
 
-struct i2c_board_info tsc2007_i2c_board_info = {
+static struct i2c_board_info tsc2007_i2c_board_info = {
 	I2C_BOARD_INFO("tsc2007", 0x48),
 	.platform_data	= &tsc2007_info,
 };
 
+/* these screens use the tsc2007 TP */
+static int __init offenburg_tsc2007_lcm(void)
+{
+	int i;
+	const char *screen = fdt_get_string ("/features", "tft", DEFAULT_LCM);
+
+	const char *supported_screens[] = {
+		"g070y2l01",
+		"lms700kf19",
+		"lms500hf04",
+		"ld050wv1sp01",
+		"lms501kf03",
+		"UNDEFINED???????",
+	};
+
+	for (i = 0; i < ARRAY_SIZE(supported_screens); i++)
+		if (strcmp(screen, supported_screens[i]) == 0)
+			return 1;
+
+	return 0;
+}
+
 static int __init offenburg_tp_init_device(void)
 {
 	struct i2c_adapter	*adapter;
+
+	/* init tsc2007 only if required for the configured screen */
+	if (!offenburg_tsc2007_lcm())
+		return 0;
 
 	/* Reset the chip in the case of the tsc2017 */
 	if (machine_is_strasbourg_a2()) {
@@ -51,10 +78,6 @@ static int __init offenburg_tp_init_device(void)
 	}
 
 	tsc2007_i2c_board_info.irq	= gpio_to_irq(TT_VGPIO_TP_IRQ);
-
-#if 0
-	TT_LINE_CONFIG(TT_VGPIO_I2C2_POWER);
-#endif
 
 	/* Add a new device on the bus. */
 	adapter	= i2c_get_adapter(2);

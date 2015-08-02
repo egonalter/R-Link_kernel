@@ -17,6 +17,7 @@
 #include <linux/mutex.h>
 #include <linux/notifier.h>
 #include <linux/time.h>
+#include <linux/regulator/consumer.h>
 
 typedef enum {
 	GPS_OFF,
@@ -64,13 +65,12 @@ extern void gps_device_unregister(struct gps_device *gpsd);
 
 #define to_gps_device(obj) container_of(obj, struct gps_device, dev)
 
-static inline void * gps_get_data(struct gps_device *gps_dev)
-{
-	return dev_get_drvdata(&gps_dev->dev);
-}
-
 struct generic_gps_info {
 	const char *name;
 	void (*gps_set_power)(int power);
+	void (*suspend)(void);
+	void (*resume)(void);
+	int (*coldboot_start)(struct device *, struct regulator *);
+	int (*coldboot_finish)(struct device *, struct regulator *);
 };
 #endif /* __GPS_H__ */

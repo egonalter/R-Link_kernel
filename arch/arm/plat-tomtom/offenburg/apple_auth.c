@@ -205,7 +205,7 @@ static int __init apple_auth_init(void)
 		goto err_gpio_req_auth_mode1;
 	}
 
-	pdev = MFD_FEATURE(apple_feats);
+	pdev = mfd_feature(apple_feats);
 	if (pdev)
 		pdata = pdev->dev.platform_data;
 	if (pdata && pdata->init)

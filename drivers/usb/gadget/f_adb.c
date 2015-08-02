@@ -589,6 +589,11 @@ static int adb_bind_config(struct usb_configuration *c)
 	struct adb_dev *dev;
 	int ret;
 
+#ifdef CONFIG_TOMTOM_FDT
+	/* enable adb only on development class devices */
+	if (fdt_get_ulong("/features", "device-class", 0) == 0)
+		return -EPERM;
+#endif
 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
 	if (!dev)
 		return -ENOMEM;
@@ -649,11 +654,7 @@ static struct android_usb_function adb_function = {
 
 static int __init init(void)
 {
-#ifdef CONFIG_TOMTOM_FDT
-	/* enable adb only on development class devices */
-	if (fdt_get_ulong("/features", "device-class", 0))
-#endif
-		android_register_function(&adb_function);
+	android_register_function(&adb_function);
 
 	return 0;
 }

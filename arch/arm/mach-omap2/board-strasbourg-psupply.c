@@ -150,7 +150,9 @@ static void timer_callback(unsigned long arg)
 {
 	printk(KERN_INFO "timer_callback: Dumping active wakelocks:\n");
 
+#ifdef CONFIG_WAKELOCK
 	dump_all_active_wakelocks();
+#endif
 
 	printk(KERN_INFO "SYSTEM_OFF Timer expired: Forcing power off\n");
 

@@ -27,11 +27,13 @@
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/i2c/twl.h>
+#include <linux/lp855x.h>
 #include <linux/regulator/machine.h>
 #include <linux/pm.h>
 #include <linux/vgpio.h>
 #include <linux/spi/spi.h>
 #include <linux/serial_reg.h>
+#include <linux/input/lis3dh.h>
 
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/nand.h>
@@ -334,8 +336,15 @@ static struct twl4030_hsmmc_info mmc[] = {
 	{}	/* Terminator */
 };
 
-static struct regulator_consumer_supply strasbourg_vmmc1_supply = {
-	.supply			= "vmmc",
+static struct regulator_consumer_supply strasbourg_vmmc1_supply[] = {
+	{
+		.supply			= "vmmc",
+	},
+	{
+		/* Accelemeter (LIS3DHTR) */
+		.supply			= "vmmc1",
+		.dev_name		= "3-0018", //LIS3DH_ACC_DEV_NAME,
+	},
 };
 
 static struct platform_device* strasbourg_pmic_vgpio;
@@ -345,7 +354,7 @@ static int strasbourg_twl_gpio_setup(struct device *dev,
 {
 	twl4030_mmc_init(mmc);
 
-	strasbourg_vmmc1_supply.dev = mmc[0].dev;
+	strasbourg_vmmc1_supply[0].dev = mmc[0].dev;
 
 	platform_device_register(strasbourg_pmic_vgpio);
 
@@ -373,7 +382,7 @@ static struct regulator_init_data strasbourg_vmmc1 = {
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
 	},
-	.num_consumer_supplies	= 1,
+	.num_consumer_supplies	= ARRAY_SIZE(strasbourg_vmmc1_supply),
 	.consumer_supplies	= &strasbourg_vmmc1_supply,
 };
 
@@ -449,9 +458,14 @@ static struct regulator_init_data strasbourg_vaux2 = {
 };
 
 /* VAUX3 for i2c2 */
-static struct regulator_consumer_supply strasbourg_vaux3_supply = {
-	.supply			= "vaux3",
-	.dev			= NULL,
+static struct regulator_consumer_supply strasbourg_vaux3_supply[] = {
+	{
+		.supply			= "vaux3",
+		.dev			= NULL,
+	},{
+		.supply			= "vdd",
+		.dev_name		= "tomtom-gps",
+	},
 };
 
 static struct regulator_init_data strasbourg_vaux3 = {
@@ -465,8 +479,32 @@ static struct regulator_init_data strasbourg_vaux3 = {
 					| REGULATOR_CHANGE_STATUS,
 		.boot_on		= true,
 	},
-	.num_consumer_supplies	= 1,
-	.consumer_supplies	= &strasbourg_vaux3_supply,
+	.num_consumer_supplies	= ARRAY_SIZE(strasbourg_vaux3_supply),
+	.consumer_supplies	= strasbourg_vaux3_supply,
+};
+
+/* VAUX4 for sensors and apple chip */
+static struct regulator_consumer_supply strasbourg_vaux4_supply[] = {
+	{
+		.supply			= "vaux4",
+		.dev_name		= "3-0018", //LIS3DH_ACC_DEV_NAME,
+	},
+};
+
+static struct regulator_init_data strasbourg_vaux4 = {
+	.constraints = {
+		.min_uV			= 1800000,
+		.max_uV			= 1800000,
+		.apply_uV		= true,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+					| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask		= REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS
+					| REGULATOR_CHANGE_VOLTAGE,
+		.boot_on		= true,
+	},
+	.num_consumer_supplies	= ARRAY_SIZE(strasbourg_vaux4_supply),
+	.consumer_supplies	= &strasbourg_vaux4_supply,
 };
 
 /* mmc2 (WLAN) and Bluetooth don't use twl4030 regulators */
@@ -505,9 +543,10 @@ static struct twl4030_platform_data __initdata strasbourg_twldata = {
 	.vaux1		= &strasbourg_vaux1,
 	.vaux2  	= &strasbourg_vaux2,
 	.vaux3		= &strasbourg_vaux3,
+	.vaux4		= &strasbourg_vaux4,
 };
 
-static struct i2c_board_info __initdata strasbourg_i2c_boardinfo[] = {
+static struct i2c_board_info __initdata strasbourg_i2c1_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("tps65950", 0x48),
 		.flags = I2C_CLIENT_WAKE,
@@ -516,8 +555,25 @@ static struct i2c_board_info __initdata strasbourg_i2c_boardinfo[] = {
 	},
 };
 
+static struct lp855x_platform_data __initdata rennes_b1_lp855x_pdata = {
+	.mode = PWM_BASED,
+};
+
+static struct i2c_board_info __initdata rennes_b1_i2c2_boardinfo[] = {
+#ifdef CONFIG_BACKLIGHT_LP855X
+	{
+		I2C_BOARD_INFO("lp8553", 0x2c),
+		.irq = INT_24XX_I2C2_IRQ,
+		.platform_data = &rennes_b1_lp855x_pdata,
+	},
+#endif
+};
+
 static void __init strasbourg_i2c_init(void)
 {
+	struct i2c_board_info *i2c2_boardinfo = NULL;
+	int i2c2_boardinfo_size = 0;
+
 	if (cpu_is_omap3630()) {
 
 		u32 prog_io;
@@ -540,9 +596,19 @@ static void __init strasbourg_i2c_init(void)
 		omap_ctrl_writel(prog_io, OMAP36XX_CONTROL_PROG_IO_WKUP1);
 	}
 
-	omap_register_i2c_bus(1, 400, NULL, strasbourg_i2c_boardinfo,
-			ARRAY_SIZE(strasbourg_i2c_boardinfo));
-	omap_register_i2c_bus(2, 100, NULL, NULL, 0);
+	if (get_strasbourg_ver() == RENNES_B1_SAMPLE) {
+		i2c2_boardinfo = rennes_b1_i2c2_boardinfo;
+		i2c2_boardinfo_size = ARRAY_SIZE(rennes_b1_i2c2_boardinfo);
+	}
+	if (get_strasbourg_ver() == STUTTGART_B1_SAMPLE) {
+		i2c2_boardinfo = rennes_b1_i2c2_boardinfo;
+		i2c2_boardinfo_size = ARRAY_SIZE(rennes_b1_i2c2_boardinfo);
+	}
+
+	omap_register_i2c_bus(1, 400, NULL, strasbourg_i2c1_boardinfo,
+			ARRAY_SIZE(strasbourg_i2c1_boardinfo));
+	omap_register_i2c_bus(2, 400, NULL, i2c2_boardinfo,
+			i2c2_boardinfo_size);
 	omap_register_i2c_bus(3, 50, NULL, NULL, 0);
 }
 
@@ -787,7 +853,10 @@ static struct omap_uart_port_info strasbourg_serial_pdata[] __initdata = {
 	{
 		/* UART1 - debug console */
 		.dma_enabled	= false,
+		.dma_rx_buf_size = OMAP_UART_DEF_RXDMA_BUFSIZE,
+		.dma_rx_timeout = OMAP_UART_DEF_RXDMA_POLL_RATE,
 		.rts_mux_driver_control = 0,
+		.hwmod_name = "uart1",
 	},
 	{
 		/* UART2 - Bluetooth */
@@ -795,11 +864,15 @@ static struct omap_uart_port_info strasbourg_serial_pdata[] __initdata = {
 		.dma_rx_buf_size = OMAP_UART_DEF_RXDMA_BUFSIZE,
 		.dma_rx_timeout = OMAP_UART_DEF_RXDMA_POLL_RATE,
 		.rts_mux_driver_control = 0,
+		.hwmod_name = "uart2",
 	},
 	{
 		/* UART3 - GPS */
-		.dma_enabled	= false,
+		.dma_enabled	= true,
+		.dma_rx_buf_size = OMAP_UART_DEF_RXDMA_BUFSIZE,
+		.dma_rx_timeout = OMAP_UART_DEF_RXDMA_POLL_RATE,
 		.rts_mux_driver_control = 0,
+		.hwmod_name = "uart3",
 	},
 };
 
@@ -833,9 +906,28 @@ static struct omap_board_mux board_mux_rennes_b1[] __initdata = {
 	{ .reg_offset = OMAP_MUX_TERMINATOR },
 };
 
+#include <mach/padconfig_stuttgart_b1.h>
+
+static struct omap_board_mux board_mux_stuttgart_b1[] __initdata = {
+
+	PADCONFIG_SETTINGS_COMMON_STUTTGART_B1
+	PADCONFIG_SETTINGS_KERNEL_STUTTGART_B1
+	
+	{ .reg_offset = OMAP_MUX_TERMINATOR },
+};
+
+static struct mfd_feat mux_feats[] = {
+	MFD_2(&board_mux_stuttgart_b1),
+	MFD_1_1(&board_mux_rennes_b1),
+	MFD_DEFAULT(&board_mux),
+};
+
 #else
-#define board_mux	NULL
-#define board_mux_rennes_b1	NULL
+
+static struct mfd_feat mux_feats[] = {
+	MFD_DEFAULT(NULL),
+};
+
 #endif
 
 /* Strasbourg (MFD 1.0 and 1.0.5) uses OTG DEVICE mode */
@@ -1151,7 +1243,7 @@ static void __init strasbourg_init(void)
 	struct platform_device* strasbourg_soc_vgpio;
 	struct omap_musb_board_data* musb_data;
 	const struct usbhs_omap_board_data* usbhs_bdata;
-	struct omap_board_mux *mux = board_mux;
+	struct omap_board_mux *mux;
 	bool mmc_strength = 1;
 
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
@@ -1164,13 +1256,15 @@ static void __init strasbourg_init(void)
 		clk_disable(gpt10_fck);
 #endif
 
+	mux = mfd_feature(mux_feats);
+
 	switch (get_strasbourg_ver()) {
+		case STUTTGART_B1_SAMPLE:
 		case RENNES_B1_SAMPLE:
 			strasbourg_soc_vgpio = &rennes_b1_soc_vgpio;
 			strasbourg_pmic_vgpio = &strasbourg_b_pmic_vgpio;
 			usbhs_bdata = &usbhs_bdata_5V75_reset;
 			musb_data = &musb_board_data;
-			mux = board_mux_rennes_b1;
 			mmc_strength = 0;
 			break;
 		case STRASBOURG_B2_SAMPLE:

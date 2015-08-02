@@ -336,8 +336,6 @@ static void ehci_hcd_omap_shutdown(struct platform_device *pdev)
 
 	if (hcd->driver->shutdown)
 		hcd->driver->shutdown(hcd);
-
-	ehci_hcd_omap_remove(pdev);
 }
 
 #ifdef CONFIG_PM

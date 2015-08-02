@@ -28,9 +28,11 @@
 #include <linux/usb/musb.h>
 
 #include <asm/sizes.h>
+#include <asm/mach-types.h>
 
 #include <mach/hardware.h>
 #include <mach/irqs.h>
+#include <mach/mfd_feat.h>
 #include <plat/mux.h>
 #include <plat/usb.h>
 #include <plat/omap-pm.h>
@@ -58,6 +60,7 @@ static struct clk *otg_clk;
 #define  NOIDLE          (1 << SIDLEMODE)
 #define  SMARTIDLE       (2 << SIDLEMODE)
 
+#define MFD_SANTIAGO(_feat)     MFD_FEAT_INIT(MACH_TYPE_SANTIAGO, 0, _feat)
 
 static void __init usb_musb_pm_init(void)
 {
@@ -102,8 +105,10 @@ static void __init usb_musb_pm_init(void)
 #endif /* CONFIG_ARCH_OMAP4 */
 
 #define MAX_USB_SERIAL_NUM		17
-#ifdef CONFIG_MACH_SANTIAGO
+
 #define TOMTOM_VENDOR_ID		0x1390
+#define OMAP_VENDOR_ID			0x0451
+
 #define TOMTOM_UMS_PRODUCT_ID		0xD100
 #define TOMTOM_ADB_PRODUCT_ID		0xD101
 #define TOMTOM_UMS_ADB_PRODUCT_ID	0xD102
@@ -112,8 +117,7 @@ static void __init usb_musb_pm_init(void)
 #define TOMTOM_ACM_PRODUCT_ID		0xD105
 #define TOMTOM_ACM_ADB_PRODUCT_ID	0xD106
 #define TOMTOM_ACM_UMS_ADB_PRODUCT_ID	0xD107
-#else
-#define OMAP_VENDOR_ID			0x0451
+
 #define OMAP_UMS_PRODUCT_ID		0xD100
 #define OMAP_ADB_PRODUCT_ID		0xD101
 #define OMAP_UMS_ADB_PRODUCT_ID		0xD102
@@ -122,8 +126,19 @@ static void __init usb_musb_pm_init(void)
 #define OMAP_ACM_PRODUCT_ID		0xD105
 #define OMAP_ACM_ADB_PRODUCT_ID		0xD106
 #define OMAP_ACM_UMS_ADB_PRODUCT_ID	0xD107
+#define OMAP_ECM_PRODUCT_ID		0xD108
 #define OMAP_YUCATAN_PRODUCT_ID		0xD200
-#endif
+
+#define MFD_ECM_PRODUCT_ID		0x0007
+#define MFD_ADB_PRODUCT_ID		0xD101
+#define MFD_UMS_ADB_PRODUCT_ID		0xD102
+#define MFD_RNDIS_PRODUCT_ID		0xD103
+#define MFD_RNDIS_ADB_PRODUCT_ID	0xD104
+#define MFD_ACM_PRODUCT_ID		0xD105
+#define MFD_ACM_ADB_PRODUCT_ID		0xD106
+#define MFD_ACM_UMS_ADB_PRODUCT_ID	0xD107
+#define MFD_UMS_PRODUCT_ID		0xD108
+#define MFD_YUCATAN_PRODUCT_ID		0xD200
 
 static char device_serial[MAX_USB_SERIAL_NUM];
 
@@ -169,7 +184,14 @@ static char *usb_functions_yucatan[] = {
 	"fvdc",
 	"fhid",
 };
+
+static char *usb_functions_ecm[] = {
+	"cdc_ethernet",
+};
 static char *usb_functions_all[] = {
+#ifdef CONFIG_USB_ANDROID_ECM
+	"cdc_ethernet",
+#endif
 #ifdef CONFIG_USB_ANDROID_RNDIS
 	"rndis",
 #endif
@@ -193,8 +215,7 @@ static char *usb_functions_all[] = {
 #endif
 };
 
-static struct android_usb_product usb_products[] = {
-#ifdef CONFIG_MACH_SANTIAGO
+static struct android_usb_product usb_products_santiago[] = {
 	{
 		.product_id     = TOMTOM_UMS_PRODUCT_ID,
 		.num_functions  = ARRAY_SIZE(usb_functions_ums),
@@ -235,7 +256,9 @@ static struct android_usb_product usb_products[] = {
 		.num_functions  = ARRAY_SIZE(usb_functions_acm_ums_adb),
 		.functions      = usb_functions_acm_ums_adb,
 	},
-#else
+};
+
+static struct android_usb_product usb_products_ti[] = {
 	{
 		.product_id     = OMAP_UMS_PRODUCT_ID,
 		.num_functions  = ARRAY_SIZE(usb_functions_ums),
@@ -281,40 +304,112 @@ static struct android_usb_product usb_products[] = {
 		.num_functions	= ARRAY_SIZE(usb_functions_yucatan),
 		.functions	= usb_functions_yucatan,
 	},
-#endif
+	{
+		.product_id	= OMAP_ECM_PRODUCT_ID,
+		.num_functions	= ARRAY_SIZE(usb_functions_ecm),
+		.functions	= usb_functions_ecm,
+	},
+};
+
+static struct android_usb_product usb_products_mfd[] = {
+	{
+		.product_id     = MFD_UMS_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_ums),
+		.functions      = usb_functions_ums,
+	},
+	{
+		.product_id     = MFD_ADB_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_adb),
+		.functions      = usb_functions_adb,
+	},
+	{
+		.product_id     = MFD_UMS_ADB_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_ums_adb),
+		.functions      = usb_functions_ums_adb,
+	},
+	{
+		.product_id     = MFD_RNDIS_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_rndis),
+		.functions      = usb_functions_rndis,
+	},
+	{
+		.product_id     = MFD_RNDIS_ADB_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_rndis_adb),
+		.functions      = usb_functions_rndis_adb,
+	},
+	{
+		.product_id     = MFD_ACM_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_acm),
+		.functions      = usb_functions_acm,
+	},
+	{
+		.product_id     = MFD_ACM_ADB_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_acm_adb),
+		.functions      = usb_functions_acm_adb,
+	},
+	{
+		.product_id     = MFD_ACM_UMS_ADB_PRODUCT_ID,
+		.num_functions  = ARRAY_SIZE(usb_functions_acm_ums_adb),
+		.functions      = usb_functions_acm_ums_adb,
+	},
+	{
+		.product_id	= MFD_YUCATAN_PRODUCT_ID,
+		.num_functions	= ARRAY_SIZE(usb_functions_yucatan),
+		.functions	= usb_functions_yucatan,
+	},
+	{
+		.product_id	= MFD_ECM_PRODUCT_ID,
+		.num_functions	= ARRAY_SIZE(usb_functions_ecm),
+		.functions	= usb_functions_ecm,
+	},
 };
 
 /* standard android USB platform data */
-static struct android_usb_platform_data andusb_plat = {
-#ifdef CONFIG_MACH_SANTIAGO
+static struct android_usb_platform_data andusb_plat_santiago = {
 	.vendor_id		= TOMTOM_VENDOR_ID,
 	.product_id		= TOMTOM_UMS_PRODUCT_ID,
-	.manufacturer_name      = "TomTom International BV.",
+	.manufacturer_name      = "TomTom International B.V.",
 	.product_name           = "Santiago",
 	.serial_number          = device_serial,
-	.num_products = ARRAY_SIZE(usb_products),
-	.products = usb_products,
+	.num_products = ARRAY_SIZE(usb_products_santiago),
+	.products = usb_products_santiago,
 	.num_functions = ARRAY_SIZE(usb_functions_all),
 	.functions = usb_functions_all,
-#else	
+};
+
+static struct android_usb_platform_data andusb_plat_ti = {
 	.vendor_id		= OMAP_VENDOR_ID,
 	.product_id		= OMAP_UMS_PRODUCT_ID,
 	.manufacturer_name      = "Texas Instruments Inc.",
 	.product_name           = "OMAP-3/4",
 	.serial_number          = device_serial,
-	.num_products = ARRAY_SIZE(usb_products),
-	.products = usb_products,
+	.num_products = ARRAY_SIZE(usb_products_ti),
+	.products = usb_products_ti,
 	.num_functions = ARRAY_SIZE(usb_functions_all),
 	.functions = usb_functions_all,
-#endif	
+};
+
+static struct android_usb_platform_data andusb_plat_mfd = {
+	.vendor_id		= TOMTOM_VENDOR_ID,
+	.product_id		= MFD_ECM_PRODUCT_ID,
+	.manufacturer_name      = "TomTom International B.V.",
+	.product_name           = "MFD",
+	.serial_number          = device_serial,
+	.num_products = ARRAY_SIZE(usb_products_mfd),
+	.products = usb_products_mfd,
+	.num_functions = ARRAY_SIZE(usb_functions_all),
+	.functions = usb_functions_all,
+};
+
+static const struct mfd_feat andusb_feats[] = {
+	MFD_SANTIAGO(&andusb_plat_santiago),
+	MFD_DEFAULT(&andusb_plat_mfd),
+	MFD_DEFAULT(&andusb_plat_ti), /* never reached */
 };
 
 static struct platform_device androidusb_device = {
 	.name   = "android_usb",
 	.id     = -1,
-	.dev    = {
-		.platform_data  = &andusb_plat,
-	},
 };
 
 #ifdef CONFIG_USB_ANDROID_RNDIS
@@ -376,6 +471,7 @@ static void usb_gadget_init(void)
 	platform_device_register(&rndis_device);
 #endif
 
+	mfd_set_pdata(&androidusb_device, andusb_feats);
 	platform_device_register(&androidusb_device);
 }
 

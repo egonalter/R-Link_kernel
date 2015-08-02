@@ -1119,6 +1119,10 @@ static int ioctl_s_power(struct v4l2_int_device *s, enum v4l2_power on)
 		printk(KERN_DEBUG "V4L2_POWER_STANDBY\n");
 		if (decoder->pdata->power_set)
 			err = decoder->pdata->power_set(s, on);
+                
+                /* Wait 30 ms before I2C commands after PowerOn 
+                   (TVP5151 datasheet: delta should be at least 20 ms) */
+                msleep(30);
 		
 		/* Configure platform */
 		tvp515x_configure(s);

@@ -27,6 +27,7 @@
 #include <plat/prcm.h>
 #include <plat/irqs.h>
 #include <plat/control.h>
+#include <plat/sram.h>
 
 #include "clock.h"
 #include "cm.h"
@@ -158,9 +159,9 @@ void omap_prcm_arch_reset(char mode)
 		return;
 	}
 
-	if (cpu_is_omap24xx() || cpu_is_omap34xx())
-		prm_set_mod_reg_bits(OMAP_RST_GS, prcm_offs, OMAP2_RM_RSTCTRL);
-
+	if (cpu_is_omap24xx() || cpu_is_omap34xx()) {
+		  omap3_warmreset();
+	}
 	if (cpu_is_omap44xx())
 		prm_set_mod_reg_bits(OMAP4430_RST_GLOBAL_WARM_SW_MASK,
 					prcm_offs, OMAP4_RM_RSTCTRL);

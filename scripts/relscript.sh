@@ -86,7 +86,7 @@ sub strasbourg_filter
 		print "# CONFIG_DEBUG_SHIRQ is not set\n";
 		print "# CONFIG_DETECT_SOFTLOCKUP is not set\n";
 		print "# CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC is not set\n";
-		print "# CONFIG_DETECT_HUNG_TASK is not set\n";
+		print "CONFIG_DETECT_HUNG_TASK=y\n";
 		print "# CONFIG_SCHED_DEBUG is not set\n";
 		print "# CONFIG_SCHEDSTATS is not set\n";
 		print "# CONFIG_TIMER_STATS is not set\n";

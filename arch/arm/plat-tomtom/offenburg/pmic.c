@@ -82,9 +82,30 @@ static struct platform_device pmic_device = {
 	.name	= "pmic",
 };
 
+static ssize_t vbus_power_store(struct kobject *kobj,
+        struct kobj_attribute *attr, const char *buf, size_t n) {
+	// Toggle vbus
+	if (buf[0] == '0')
+		gpio_direction_output(TT_VGPIO_5V75_ON, 0);
+	else if (buf[0] == '1')
+		gpio_direction_output(TT_VGPIO_5V75_ON, 1);
+	else
+		dev_warn(&pmic_device.dev, "Store value is not 0 or 1 -- ignoring\n");
+
+	return n;
+}
+
+static struct kobj_attribute vbus_power_attr =
+	__ATTR(vbus_power, 0666, NULL, vbus_power_store);
+
+
 static int __init pmic_init(void)
 {
 	platform_device_register(&pmic_device);
+	if (sysfs_create_file(&pmic_device.dev.kobj,
+				&vbus_power_attr.attr)) {
+		dev_warn(&pmic_device.dev, "Could not create sysfs file\n");
+	}
 	return platform_driver_register(&pmic_driver);
 }
 

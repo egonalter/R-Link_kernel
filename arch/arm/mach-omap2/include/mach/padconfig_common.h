@@ -146,8 +146,13 @@
 #define PC_WAKEUP_EN            (1 << 14)
 #define PC_OFF_EN               (1 << 9)
 #define PC_OFFOUT_EN		(1 << 10)
+#define PC_OFF_PULL_EN		(1 << 12)
+#define PC_OFF_PULL_UP		(1 << 13)
 #define PC_OFF_OUT_LOW		(PC_OFF_EN)
 #define PC_OFF_IN_NOPULL	(PC_OFF_EN | PC_OFFOUT_EN)
+#define PC_OFF_IN_PULLUP	(PC_OFF_IN_NOPULL | PC_OFF_PULL_EN | PC_OFF_PULL_UP)
+#define PC_OFF_IN_PULLDOWN	(PC_OFF_IN_NOPULL | PC_OFF_PULL_EN)
+
 #endif // BOOTLOADER_UBOOT_PADCONFIG
 
 /*********** KERNEL, used in case of kernel build, board-santiago.c ***********/
@@ -175,8 +180,11 @@
 #define PC_OFFOUT_VAL           OMAP_OFFOUT_VAL
 #define PC_OFF_PULL_EN          OMAP_OFF_PULL_EN
 #define PC_OFF_PULL_UP          OMAP_OFF_PULL_UP
-#define PC_OFF_OUT_LOW		OMAP_PIN_OFF_OUTPUT_LOW
-#define PC_OFF_IN_NOPULL	OMAP_PIN_OFF_INPUT_NOPULL
+#define PC_OFF_OUT_LOW          OMAP_PIN_OFF_OUTPUT_LOW
+#define PC_OFF_OUT_HIGH         OMAP_PIN_OFF_OUTPUT_HIGH
+#define PC_OFF_IN_NOPULL        OMAP_PIN_OFF_INPUT_NOPULL
+#define PC_OFF_IN_PULLUP        OMAP_PIN_OFF_INPUT_PULLUP
+#define PC_OFF_IN_PULLDOWN      OMAP_PIN_OFF_INPUT_PULLDOWN
 
 #endif // KERNEL_PADCONFIG
 

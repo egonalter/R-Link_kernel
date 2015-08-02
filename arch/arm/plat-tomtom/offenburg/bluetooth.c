@@ -21,8 +21,23 @@
 #include <linux/io.h>
 #include <mach/gpio.h>
 #include <linux/vgpio.h>
+#include <plat/gpio_cache.h>
 #include <plat/offenburg.h>
 #include <plat/csr_bc_mode.h>
+
+/*
+ * set LOW in this order and restore in the reverse, they need to be
+ * low when 1V8_AUX3 is automatically turned on by the pmic on resume
+ */
+static struct gpio_cache cached[] = {
+	{ 60,  }, /* nBT_RST */
+	{ 142, }, /* BT_Rx */
+	{ 143, }, /* BT_Tx */
+	{ 158, }, /* BT_PCM_IN */
+	{ 159, }, /* BT_PCM_OUT */
+	{ 161, }, /* BT_PCM_SYNC */
+	{ 162, }, /* BT_PCM_CLK */
+};
 
 static int bluetooth_gpio_request(void)
 {
@@ -73,10 +88,14 @@ static int bluetooth_pio4(void) {
 static void bluetooth_suspend (void)
 {
 	gpio_set_value(TT_VGPIO_BT_RST, 1);
+	printk(KERN_DEBUG "%s - setting data lines to low...\n", __func__);
+	WARN_ON(gpio_cache_set_out(cached, ARRAY_SIZE(cached), 0));
 }
 
 static void bluetooth_resume (void)
 {
+	printk(KERN_DEBUG "%s - restoring data lines...\n", __func__);
+	gpio_cache_restore(cached, ARRAY_SIZE(cached));
 	gpio_set_value(TT_VGPIO_BT_RST, 0);
 }
 
@@ -110,6 +129,9 @@ static struct platform_device bt_pdev = {
 
 static int __init bluetooth_init( void )
 {
+	if (gpio_cache_alloc(cached, ARRAY_SIZE(cached)))
+		return -ENOMEM;
+
 	if (platform_device_register(&bt_pdev))
 		printk(KERN_ERR "Could not register csr-bc platform device\n");
 

@@ -33,6 +33,8 @@
 
 #include "sdrc.h"
 #include "cm.h"
+#include "prcm-common.h"
+#include "prm.h"
 
 	.text
 
@@ -67,6 +69,9 @@
 
 /* CM_CLKSEL1_PLL bit settings */
 #define CORE_DPLL_CLKOUT_DIV_SHIFT	0x1b
+
+/* PRM_RSTCTRL bit setting */
+#define EN_GLOBAL_SW_RESET		0x2
 
 /* DSS registers */
 #define OMAP34XX_DISPC_BASE		0x48050400
@@ -353,4 +358,33 @@ omap3_dispc_irq_st:
 
 ENTRY(omap3_sram_configure_core_dpll_sz)
 	.word	. - omap3_sram_configure_core_dpll
+	
+/* omap3_sram_warmreset
+ * Enable SDRC self refresh on idle request.
+ * Set RST_GS bit in prm_rstctrl register
+ */
 
+ENTRY(omap3_sram_warmreset)
+
+	ldr	r11, omap3_sdrc_power1	@ read the SDRC_POWER register
+	ldr	r12, [r11]		@ read the contents of SDRC_POWER
+	orr 	r12, r12, #SRFRONIDLEREQ_MASK	@ enable self refresh on idle
+	str 	r12, [r11]		@ write back to SDRC_POWER register
+	ldr	r12, [r11]		@ posted-write barrier for SDRC
+
+	ldr	r11, omap3_reset_cntrl
+	ldr	r12,[r11]
+	orr 	r12, r12, #EN_GLOBAL_SW_RESET
+	str 	r12, [r11]
+et1:	
+	b	et1
+
+
+
+omap3_reset_cntrl:
+	.word 	OMAP34XX_PRM_REGADDR(OMAP3430_GR_MOD,OMAP2_RM_RSTCTRL)
+omap3_sdrc_power1:
+	.word 	OMAP34XX_SDRC_REGADDR(SDRC_POWER)
+
+ENTRY(omap3_sram_warmreset_sz)
+	.word	. - omap3_sram_warmreset

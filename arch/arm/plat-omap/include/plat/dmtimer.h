@@ -65,6 +65,10 @@ struct omap_dm_timer_plat_info {
 	int irq;
 };
 
+void omap_dm_timer_read_regs(struct omap_dm_timer *timer, u32 *regs, int numregs);
+void omap_dm_timer_write_regs(struct omap_dm_timer *timer, const u32 *regs, int numregs);
+void omap_dm_timer_dump_regs(struct omap_dm_timer *timer);
+
 struct omap_dm_timer *omap_dm_timer_request(void);
 struct omap_dm_timer *omap_dm_timer_request_specific(int timer_id);
 struct omap_dm_timer *omap_dm_timer_request_specific_noreset(int timer_id);
@@ -79,16 +83,20 @@ struct clk *omap_dm_timer_get_fclk(struct omap_dm_timer *timer);
 
 void omap_dm_timer_trigger(struct omap_dm_timer *timer);
 void omap_dm_timer_start(struct omap_dm_timer *timer);
+u32  omap_dm_timer_get_ctrl(struct omap_dm_timer *timer);
+void omap_dm_timer_set_ctrl(struct omap_dm_timer *timer, u32 l);
 void omap_dm_timer_stop(struct omap_dm_timer *timer);
 
 int omap_dm_timer_set_source(struct omap_dm_timer *timer, int source);
 void omap_dm_timer_set_load(struct omap_dm_timer *timer, int autoreload, unsigned int value);
 void omap_dm_timer_set_load_start(struct omap_dm_timer *timer, int autoreload, unsigned int value);
 void omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable, unsigned int match);
+unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer);
 void omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on, int toggle, int trigger);
 void omap_dm_timer_set_prescaler(struct omap_dm_timer *timer, int prescaler);
 
 void omap_dm_timer_set_int_enable(struct omap_dm_timer *timer, unsigned int value);
+int omap_dm_timer_set_int_disable(struct omap_dm_timer *timer, unsigned int value);
 
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer);
 void omap_dm_timer_write_status(struct omap_dm_timer *timer, unsigned int value);

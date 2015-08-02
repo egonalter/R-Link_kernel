@@ -6,6 +6,12 @@
 #define VGPIO_OFFENBURG_BASE	400	/* Virtual gpio base */
 #define VGPIO_OFFENBURG_PMIC_BASE 600
 
+#if defined(CONFIG_MACH_STRASBOURG) || defined(CONFIG_MACH_STRASBOURG_A2) || defined(CONFIG_MACH_STRASBOURG_XENIA)
+#define DEFAULT_LCM "g070y2l01"
+#elif defined(CONFIG_MACH_SANTIAGO)
+#define DEFAULT_LCM "ld050wv1sp01"
+#endif
+
 enum offenburg_vgpio_pins {
 	TT_VGPIO_BASE	= VGPIO_OFFENBURG_BASE,
 

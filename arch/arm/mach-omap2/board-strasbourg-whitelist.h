@@ -1,4 +1,5 @@
 #include <linux/usb.h>
+#include <linux/usb/cdc.h>
 
 /* Vendor and product IDs */
 #define OPTION_VENDOR_ID			0x0AF0
@@ -288,6 +289,16 @@
 #define NXP_VENDOR_ID				0x1fc9
 #define NXP_PRODUCT_CRD2010			0x0109
 
+/* Nokia products */
+#define NOKIA_VENDOR_ID				0x0421
+
+/* Samsung products */
+#define SAMSUNG_VENDOR_ID			0x04e8
+
+#define USB_DEVICE_VEND(vend) \
+	.match_flags = USB_DEVICE_ID_MATCH_VENDOR, \
+	.idVendor = (vend)
+
 /* USB Embedded Host whitelist */
 struct usb_device_id usbhost_whitelist_table [] = {
 
@@ -309,6 +320,9 @@ struct usb_device_id usbhost_whitelist_table [] = {
 
 	/* TCU modem */
 	{ USB_DEVICE(0x114f, 0x1234), },
+
+	/* TCU Gen 2 */
+	{ USB_DEVICE(0x2609, 0x0003), },
 	
 	/* Apple iPods/iPhones */
 	{ .match_flags = USB_DEVICE_ID_MATCH_VENDOR | USB_DEVICE_ID_MATCH_INT_CLASS,
@@ -700,19 +714,73 @@ struct usb_device_id usbhost_whitelist_table [] = {
 	{ USB_DEVICE(NXP_VENDOR_ID, NXP_PRODUCT_CRD2010) }, /* NXP Radio CRD2010 */
 #endif 
 
-#if defined(CONFIG_TOMTOM_DEBUG)
 #if defined(CONFIG_USB_USBNET) || defined(CONFIG_USB_USBNET_MODULE)
-	{ USB_DEVICE(DAVICOM_VENDOR_ID, DAVICOM_PRODUCT_DM9601), },
-	{ USB_DEVICE(MOSCHIP_VENDOR_ID, MOSCHIP_PRODUCT_MCS7830_ID), },
-	{ USB_DEVICE(DLINK2_VENDOR_ID, DLINK2_PRODUCT_DUB_E100), },
-#endif
-#endif
+	{ USB_DEVICE_VEND(DAVICOM_VENDOR_ID), },
+	{ USB_DEVICE_VEND(MOSCHIP_VENDOR_ID), },
+	{ USB_DEVICE_VEND(DLINK2_VENDOR_ID), },
+
+	/*
+	 * from catc.c kaweth.c rtl8150.c gl620a.c net1080.c plusb.c
+	 * the only buildable USB ethernet drivers in the tree
+	 *
+	 * NOTE: _none_ of these has been tested, handle carefully
+	 */ 
+	{ USB_DEVICE_VEND(0x03e8), },
+	{ USB_DEVICE_VEND(0x0423), },
+	{ USB_DEVICE_VEND(0x0423), },
+	{ USB_DEVICE_VEND(0x04bb), },
+	{ USB_DEVICE_VEND(0x0506), },
+	{ USB_DEVICE_VEND(0x0506), },
+	{ USB_DEVICE_VEND(0x0525), },
+	{ USB_DEVICE_VEND(0x0557), },
+	{ USB_DEVICE_VEND(0x0557), },
+	{ USB_DEVICE_VEND(0x0565), },
+	{ USB_DEVICE_VEND(0x0565), },
+	{ USB_DEVICE_VEND(0x0565), },
+	{ USB_DEVICE_VEND(0x05e3), },
+	{ USB_DEVICE_VEND(0x05e9), },
+	{ USB_DEVICE_VEND(0x05e9), },
+	{ USB_DEVICE_VEND(0x066b), },
+	{ USB_DEVICE_VEND(0x067b), },
+	{ USB_DEVICE_VEND(0x067b), },
+	{ USB_DEVICE_VEND(0x06D0), },
+	{ USB_DEVICE_VEND(0x06e1), },
+	{ USB_DEVICE_VEND(0x06e1), },
+	{ USB_DEVICE_VEND(0x0707), },
+	{ USB_DEVICE_VEND(0x07aa), },
+	{ USB_DEVICE_VEND(0x07b8), },
+	{ USB_DEVICE_VEND(0x0846), },
+	{ USB_DEVICE_VEND(0x0846), },
+	{ USB_DEVICE_VEND(0x085a), },
+	{ USB_DEVICE_VEND(0x085a), },
+	{ USB_DEVICE_VEND(0x087d), },
+	{ USB_DEVICE_VEND(0x08d1), },
+	{ USB_DEVICE_VEND(0x0951), },
+	{ USB_DEVICE_VEND(0x095a), },
+	{ USB_DEVICE_VEND(0x10bd), },
+	{ USB_DEVICE_VEND(0x1342), },
+	{ USB_DEVICE_VEND(0x13d2), },
+	{ USB_DEVICE_VEND(0x1485), },
+	{ USB_DEVICE_VEND(0x1485), },
+	{ USB_DEVICE_VEND(0x1645), },
+	{ USB_DEVICE_VEND(0x1645), },
+	{ USB_DEVICE_VEND(0x1645), },
+	{ USB_DEVICE_VEND(0x1668), },
+	{ USB_DEVICE_VEND(0x2001), },
+#endif /* CONFIG_USB_USBNET || CONFIG_USB_USBNET_MODULE */
 
 #if	defined(CONFIG_USB_TEST) || defined(CONFIG_USB_TEST_MODULE)
 	/* gadget zero, for testing */
 	{ USB_DEVICE(0x0525, 0xa4a0), },
 #endif
 	{ USB_DEVICE(0x045e, 0x04ec), }, /* HTC Titan x310 */
+
+	/* MirrorLink */
+	{ USB_DEVICE_VEND(NOKIA_VENDOR_ID), },
+	{ USB_DEVICE_VEND(SAMSUNG_VENDOR_ID), },
+
+	{ USB_INTERFACE_INFO(USB_CLASS_COMM,
+		USB_CDC_SUBCLASS_NCM, USB_CDC_PROTO_NONE), },
 
 { }	/* Terminating entry */
 };

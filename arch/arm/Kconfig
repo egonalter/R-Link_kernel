@@ -1348,6 +1348,29 @@ config ZBOOT_ROM
 	  Say Y here if you intend to execute your compressed kernel image
 	  (zImage) directly from ROM or flash.  If unsure, say N.
 
+menu "Command line"
+
+choice
+	prompt "Kernel command line"
+	optional
+	default CMDLINE_OVERWRITE
+	help
+	  Setting this option allows the kernel command line arguments
+	  to be set.
+
+config CMDLINE_OVERWRITE
+	bool "Overwrite bootloader kernel arguments"
+	help
+	  Given string will overwrite any arguments passed in by
+	  a bootloader.
+
+config CMDLINE_EXTEND
+	bool "Extend bootloader kernel arguments"
+	help
+	  Given string will be concatenated with arguments passed in
+	  by a bootloader.
+endchoice
+
 config CMDLINE
 	string "Default kernel command string"
 	default ""
@@ -1357,6 +1380,7 @@ config CMDLINE
 	  architectures, you should supply some command-line options at build
 	  time by entering them here. As a minimum, you should specify the
 	  memory size and the root device (e.g., mem=64M root=/dev/nfs).
+endmenu
 
 config XIP_KERNEL
 	bool "Kernel Execute-In-Place from ROM"

@@ -156,6 +156,13 @@ config BACKLIGHT_LOCOMO
 	  If you have a Sharp Zaurus SL-5500 (Collie) or SL-5600 (Poodle) say y to
 	  enable the LCD/backlight driver.
 
+config BACKLIGHT_LP855X
+	tristate "Backlight driver for TI LP855X"
+	depends on BACKLIGHT_CLASS_DEVICE && I2C
+	help
+	  This supports TI LP8550, LP8551, LP8552, LP8553 and LP8556
+	  backlight driver.
+
 config BACKLIGHT_OMAP1
 	tristate "OMAP1 PWL-based LCD Backlight"
 	depends on BACKLIGHT_CLASS_DEVICE && ARCH_OMAP1

@@ -184,7 +184,7 @@ void __init omap_detect_sram(void)
 		}
 	}
 
-	printk(KERN_INFO "omap_sam_base (VA) == 0x%lx\n", omap_sram_base);
+	printk(KERN_INFO "omap_sram_base (VA) == 0x%lx\n", omap_sram_base);
 	printk(KERN_INFO "omap_sram_start (PA) == 0x%lx\n", omap_sram_start);
 	printk(KERN_INFO "omap_sram_size (SIZE) == 0x%lx\n", omap_sram_size);
 
@@ -411,6 +411,18 @@ u32 omap3_configure_core_dpll(u32 m2, u32 unlock_dll, u32 f, u32 inc,
 			sdrc_actim_ctrl_b_1, sdrc_mr_1);
 }
 
+/* Function for SDRC config for warm reset */
+static u32 (*_omap3_sram_warmreset)(void);
+
+void omap3_warmreset()
+{
+	if (WARN_ON( !_omap3_sram_warmreset))
+	  return;
+	local_irq_disable();
+	local_fiq_disable();
+	_omap3_sram_warmreset();
+}
+
 #ifdef CONFIG_PM
 void omap3_sram_restore_context(void)
 {
@@ -419,6 +431,9 @@ void omap3_sram_restore_context(void)
 	_omap3_sram_configure_core_dpll =
 		omap_sram_push(omap3_sram_configure_core_dpll,
 			       omap3_sram_configure_core_dpll_sz);
+	_omap3_sram_warmreset =
+		omap_sram_push(omap3_sram_warmreset,
+			       omap3_sram_warmreset_sz);
 	omap_push_sram_idle();
 }
 #endif /* CONFIG_PM */
@@ -428,6 +443,9 @@ int __init omap34xx_sram_init(void)
 	_omap3_sram_configure_core_dpll =
 		omap_sram_push(omap3_sram_configure_core_dpll,
 			       omap3_sram_configure_core_dpll_sz);
+	_omap3_sram_warmreset =
+		omap_sram_push(omap3_sram_warmreset,
+			       omap3_sram_warmreset_sz);
 	omap_push_sram_idle();
 	return 0;
 }

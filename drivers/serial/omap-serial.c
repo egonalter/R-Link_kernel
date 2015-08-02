@@ -20,6 +20,8 @@
  * this driver as required for the omap-platform.
  */
 
+#define DEBUG
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/console.h>
@@ -37,6 +39,25 @@
 #include <plat/dma.h>
 #include <plat/dmtimer.h>
 #include <plat/omap-serial.h>
+#include <plat/omap_hwmod.h>
+
+#define UART_BUILD_REVISION(x, y)	(((x) << 8) | (y))
+
+#define OMAP_UART_REV_42 0x0402
+#define OMAP_UART_REV_46 0x0406
+#define OMAP_UART_REV_52 0x0502
+#define OMAP_UART_REV_63 0x0603
+
+/* MVR register bitmasks */
+#define OMAP_UART_MVR_SCHEME_SHIFT	30
+
+#define OMAP_UART_LEGACY_MVR_MAJ_MASK	0xf0
+#define OMAP_UART_LEGACY_MVR_MAJ_SHIFT	4
+#define OMAP_UART_LEGACY_MVR_MIN_MASK	0x0f
+
+#define OMAP_UART_MVR_MAJ_MASK		0x700
+#define OMAP_UART_MVR_MAJ_SHIFT		8
+#define OMAP_UART_MVR_MIN_MASK		0x3f
 
 static struct uart_omap_port *ui[OMAP_MAX_HSUART_PORTS];
 
@@ -787,7 +808,7 @@ serial_omap_set_termios(struct uart_port *port, struct ktermios *termios,
 	serial_out(up, UART_MCR, up->mcr);
 
 	/* Protocol, Baud Rate, and Interrupt Settings */
-	if (cpu_is_omap44xx()){
+	if ((up->errata & UART_ERRATA_i202_MDR1_ACCESS) == 0) {
 		serial_out(up, UART_OMAP_MDR1, UART_OMAP_MDR1_DISABLE);
 	} else {
 		serial_out(up, UART_LCR, 0x0);                  /* Access FCR */
@@ -812,7 +833,8 @@ serial_omap_set_termios(struct uart_port *port, struct ktermios *termios,
 
 	serial_out(up, UART_EFR, up->efr);
 	serial_out(up, UART_LCR, cval);
-	if (cpu_is_omap44xx()){
+
+	if ((up->errata & UART_ERRATA_i202_MDR1_ACCESS) == 0) {
 		if (baud > 230400 && baud != 3000000)
 			serial_out(up, UART_OMAP_MDR1, UART_OMAP_MDR1_13X_MODE);
 		else
@@ -1084,8 +1106,20 @@ serial_omap_suspend(struct platform_device *pdev, pm_message_t state)
 {
 	struct uart_omap_port *up = platform_get_drvdata(pdev);
 
+	/*
+	 * Errata i291: [UART]: Cannot Acknowledge Idle Requests
+	 * in Smartidle Mode When Configured for DMA Operations.
+	 * WA: configure uart in force idle mode.
+	 */
+	if (up && up->use_dma && up->hwmod &&
+	    (up->errata & UART_ERRATA_i291_DMA_FORCEIDLE)) {
+		dev_dbg(&pdev->dev, "Forcing DMA idle (Errata i291)\n");
+		omap_hwmod_set_slave_idlemode(up->hwmod, HWMOD_IDLEMODE_FORCE);
+	}
+
 	if (up)
 		uart_suspend_port(&serial_omap_reg, &up->port);
+
 	return 0;
 }
 
@@ -1274,6 +1308,62 @@ static void uart_tx_dma_callback(int lch, u16 ch_status, void *data)
 	return;
 }
 
+static void omap_serial_fill_features_erratas(struct uart_omap_port *up)
+{
+	u32 mvr, scheme;
+	u16 revision, major, minor;
+
+	mvr = readl(up->port.membase + (UART_OMAP_MVER << up->port.regshift));
+
+	/* Check revision register scheme */
+	scheme = mvr >> OMAP_UART_MVR_SCHEME_SHIFT;
+
+	switch (scheme) {
+	case 0: /* Legacy Scheme: OMAP2/3 */
+		/* MINOR_REV[0:4], MAJOR_REV[4:7] */
+		major = (mvr & OMAP_UART_LEGACY_MVR_MAJ_MASK) >>
+					OMAP_UART_LEGACY_MVR_MAJ_SHIFT;
+		minor = (mvr & OMAP_UART_LEGACY_MVR_MIN_MASK);
+		break;
+	case 1:
+		/* New Scheme: OMAP4+ */
+		/* MINOR_REV[0:5], MAJOR_REV[8:10] */
+		major = (mvr & OMAP_UART_MVR_MAJ_MASK) >>
+					OMAP_UART_MVR_MAJ_SHIFT;
+		minor = (mvr & OMAP_UART_MVR_MIN_MASK);
+		break;
+	default:
+		dev_warn(&up->pdev->dev,
+			"Unknown %s revision, defaulting to highest\n",
+			up->name);
+		/* highest possible revision */
+		major = 0xff;
+		minor = 0xff;
+	}
+
+	/* normalize revision for the driver */
+	revision = UART_BUILD_REVISION(major, minor);
+
+	switch (revision) {
+	case OMAP_UART_REV_46:
+		up->errata |= (UART_ERRATA_i202_MDR1_ACCESS |
+			UART_ERRATA_i291_DMA_FORCEIDLE);
+		break;
+	case OMAP_UART_REV_52:
+		up->errata |= (UART_ERRATA_i202_MDR1_ACCESS |
+			UART_ERRATA_i291_DMA_FORCEIDLE);
+		break;
+	case OMAP_UART_REV_63:
+		up->errata |= UART_ERRATA_i202_MDR1_ACCESS;
+		break;
+	default:
+		break;
+	}
+
+	dev_dbg(&up->pdev->dev, "Revision: 0x%04x, Errata: 0x%04x\n",
+		revision, up->errata);
+}
+
 static int serial_omap_probe(struct platform_device *pdev)
 {
 	struct uart_omap_port	*up;
@@ -1334,6 +1424,7 @@ static int serial_omap_probe(struct platform_device *pdev)
 	up->port.irqflags = omap_up_info->irqflags;
 	up->port.uartclk = omap_up_info->uartclk;
 	up->uart_dma.uart_base = mem->start;
+	up->hwmod = omap_hwmod_lookup(omap_up_info->hwmod_name);
 
 	if (omap_up_info->dma_enabled) {
 		up->uart_dma.uart_dma_tx = dma_tx->start;
@@ -1346,6 +1437,8 @@ static int serial_omap_probe(struct platform_device *pdev)
 		up->uart_dma.tx_dma_channel = OMAP_UART_DMA_CH_FREE;
 		up->uart_dma.rx_dma_channel = OMAP_UART_DMA_CH_FREE;
 	}
+
+	omap_serial_fill_features_erratas(up);
 
 	ui[pdev->id] = up;
 	serial_omap_add_console_port(up);

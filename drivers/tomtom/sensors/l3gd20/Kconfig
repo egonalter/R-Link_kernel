@@ -1,0 +1,15 @@
+# drivers/tomtom/sensors/l3gd20/Kconfig
+#
+# Copyright (C) 2013 TomTom BV <http://www.tomtom.com/>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+config TOMTOM_L3GD20
+	tristate "STMicroelectronics L3GD20 three-axis digital gyroscope driver"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+          This option enables support for the STMicroelectronics L3GD20 three-axis Gyroscope.
+

@@ -576,6 +576,17 @@ config TOUCHSCREEN_HX8519
 	  To compile this driver as a module, choose M here: the
 	  module will be called hx8519.
 
+config TOUCHSCREEN_ATMEL_MXT
+	tristate "mXT336S based touchscreens"
+	depends on I2C
+	help
+	  Say Y here if you have an Atmel mXT336S based touchscreen.
+
+	  If unsure, say N.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called atmel_mxt_ts.
+
 config TOUCHSCREEN_W90X900
 	tristate "W90P910 touchscreen driver"
 	depends on HAVE_CLK

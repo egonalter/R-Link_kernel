@@ -129,22 +129,25 @@ static void hx8519_work(struct work_struct *work)
     {
       for(i=0; i<TOUCH_NUMBER; i++) 
       {
-        if (buf[i] != 0xffffffff)
+        if (buf[i] != 0xffffffff && buf[i] != 0x0)
         {
           x = ((buf[i] & 0xff) << 8) | ((buf[i] & 0xff00) >> 8);
           y = ((buf[i] & 0xff0000) >> 8) | ((buf[i] & 0xff000000) >> 24);
-          // tweak x/y to hx8519 touchpanel geometry
-          y=((y*1500) >> 8) + 200;
-          x=((x*1006)  >> 8) + 78;
-  
-          if ( x>78 && y>200 && x<MAX_12BIT && y<MAX_12BIT)
+
+          if (x<1024 && y<600)
           {
+            // Convert into MFD TP coordinates
+            x = 3986*x;
+            x = x/1024 +94;
+            y = 3900*y;
+            y = y/600 + 170;
+
             if(!ts->pendown)
             {
               ts->pendown = true;
               input_report_key(input, BTN_TOUCH, 1);
             }
-  
+
             ts->pendownhysteris = 0;
             input_report_abs(input, ABS_X, x);
             input_report_abs(input, ABS_Y, y);
@@ -152,18 +155,18 @@ static void hx8519_work(struct work_struct *work)
             input_sync(input);
           }
         }
-        else
-        {
-          if(ts->pendown && (ts->pendownhysteris++ > PENUPCOUNT))
-          {
-            ts->pendown = false;
-            input_report_key(input, BTN_TOUCH, 0);
-            input_report_abs(input, ABS_PRESSURE, 0);
-            input_sync(input);
-            ts->pendownhysteris = PENUPCOUNT;
-          }
-        }
       }
+    }
+  }
+  else
+  {
+    if(ts->pendown && (ts->pendownhysteris++ > PENUPCOUNT))
+    {
+      ts->pendown = false;
+      input_report_key(input, BTN_TOUCH, 0);
+      input_report_abs(input, ABS_PRESSURE, 0);
+      input_sync(input);
+      ts->pendownhysteris = PENUPCOUNT;
     }
   }
 }
@@ -187,7 +190,7 @@ static enum hrtimer_restart himax_ts_timer_func(struct hrtimer *timer)
 {
     struct hx8519 *ts = container_of(timer, struct hx8519, timer);
 
-    queue_work(hx8519_wq, &ts->work);
+    queue_delayed_work(hx8519_wq, &ts->work, 0);
 
     hrtimer_start(&ts->timer, ktime_set(0, 12500000), HRTIMER_MODE_REL);
     return HRTIMER_NORESTART;
@@ -214,7 +217,7 @@ static int __devinit hx8519_probe(struct i2c_client *client,
 	struct input_dev *input_dev;
 	int err;
   uint8_t buf0[6];
-printk("hx8119 probe\n");
+
 	if (!pdata) {
 		dev_err(&client->dev, "platform data is required!\n");
 		return -EINVAL;
@@ -278,6 +281,15 @@ printk("hx8119 probe\n");
     return -EIO;
   }
   msleep(300);
+  /* Reload disable */
+  buf0[0] = 0x42;
+  buf0[1] = 0x02;
+  err = i2c_master_send(ts->client,buf0, 2);
+  if(err < 0) {
+    return -EIO;
+  }
+  msleep(150);
+
   /* MCU power on */
   buf0[0] = 0x35;
   buf0[1] = 0x02;
@@ -286,15 +298,27 @@ printk("hx8119 probe\n");
     return -EIO;
   }
   msleep(300);
+
   /* flash power on */
   buf0[0] = 0x36;
-  buf0[1] = 0x01;
-  err = i2c_master_send(ts->client, buf0, 2);
+  buf0[1] = 0x0F;
+  buf0[2] = 0x53;
+  err = i2c_master_send(ts->client, buf0, 3);
   if(err < 0) {
     return -EIO;
   }
   msleep(300);
 
+  /* Turn cache on */
+  buf0[0] = 0xDD;
+  buf0[1] = 0x04;
+  buf0[2] = 0x02;
+  err = i2c_master_send(ts->client, buf0, 3);
+  if(err < 0) {
+    return -EIO;
+  }
+  msleep(10);
+  
   if (pdata->init_platform_hw)
     pdata->init_platform_hw();
 

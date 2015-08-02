@@ -290,7 +290,39 @@ static ssize_t regulator_state_show(struct device *dev,
 
 	return ret;
 }
-static DEVICE_ATTR(state, 0444, regulator_state_show, NULL);
+static ssize_t regulator_state_set(struct device *dev, struct device_attribute *attr,
+                                   const char *buf, size_t count)
+{
+	struct regulator_dev *rdev = dev_get_drvdata(dev);
+	bool enabled;
+	int err;
+
+	/*
+	 * sysfs_streq() doesn't need the \n's, but we add them so the strings
+	 * will be shared with show_state(), above.
+	 */
+	if (sysfs_streq(buf, "enabled\n") || sysfs_streq(buf, "1"))
+		enabled = true;
+	else if (sysfs_streq(buf, "disabled\n") || sysfs_streq(buf, "0"))
+		enabled = false;
+	else {
+		dev_err(dev, "Configuring invalid mode\n");
+		return count;
+	}
+
+	mutex_lock(&rdev->mutex);
+	if (enabled)
+		err = rdev->desc->ops->enable(rdev);
+	else
+		err = rdev->desc->ops->disable(rdev);
+	mutex_unlock(&rdev->mutex);
+
+	if (err)
+		dev_err(dev, "Failed to configure state: %d\n", err);
+
+	return count;
+}
+static DEVICE_ATTR(state, 0644, regulator_state_show, regulator_state_set);
 
 static ssize_t regulator_status_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)

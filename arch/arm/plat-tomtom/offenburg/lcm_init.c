@@ -7,12 +7,6 @@
 #include <plat/display.h>
 #include <plat/fdt.h>
 
-#if defined(CONFIG_MACH_STRASBOURG) || defined(CONFIG_MACH_STRASBOURG_A2) || defined(CONFIG_MACH_STRASBOURG_XENIA)
-#define DEFAULT_LCM "g070y2l01"
-#elif defined(CONFIG_MACH_SANTIAGO)
-#define DEFAULT_LCM "ld050wv1sp01"
-#endif
-
 extern void dispc_enable_lcd_out(bool enable);
 
 extern struct omap_dss_device offenburg_lms500_lcd_device;
@@ -34,6 +28,22 @@ static struct lcm_desc offenburg_lcm[] __initdata = {
 		.lcm_info	= &offenburg_cmog070_lcd_device,
 	},
 	{
+		.lcm_name	= "DD070NA_H8519",
+		.lcm_info	= &offenburg_cmog070_lcd_device,
+	},
+	{
+		.lcm_name	= "DD070NA_A336",
+		.lcm_info	= &offenburg_cmog070_lcd_device,
+	},
+	{
+		.lcm_name	= "DD070NA_A336_1",
+		.lcm_info	= &offenburg_cmog070_lcd_device,
+	},
+	{
+		.lcm_name	= "DD070NA_A336_2",
+		.lcm_info	= &offenburg_cmog070_lcd_device,
+	},
+	{
 		.lcm_name	= "lms700kf19",
 		.lcm_info	= &offenburg_lms700_lcd_device,
 	},
@@ -51,27 +61,28 @@ static struct lcm_desc offenburg_lcm[] __initdata = {
 	},
 };
 
-static int __init init_lcm(void)
+static struct omap_dss_device *get_lcm_info(void)
 {
 	int i;
 	const char *screen = fdt_get_string ("/features", "tft", DEFAULT_LCM);
 
-	offenburg_lcd_device =
+	for (i = 0; i < ARRAY_SIZE(offenburg_lcm); i++)
+		if (strcmp(offenburg_lcm[i].lcm_name, screen) == 0)
+			return offenburg_lcm[i].lcm_info;
+
 #if defined(CONFIG_MACH_STRASBOURG) || defined(CONFIG_MACH_STRASBOURG_A2) || defined(CONFIG_MACH_STRASBOURG_XENIA)
-		*offenburg_lcm[0].lcm_info; /* g070y2l01 */
+	printk(KERN_WARNING "LCM in FDT not found, using built-in default g070y2l01\n");
+	return &offenburg_cmog070_lcd_device; /* g070y2l01 */
 #elif defined(CONFIG_MACH_SANTIAGO)
-		*offenburg_lcm[3].lcm_info; /* ld050wv1sp01 */
+	printk(KERN_WARNING "LCM in FDT not found, using built-in default ld050wv1sp01\n");
+	return &offenburg_ld050wv1sp01_lcd_device; /* ld050wv1sp01 */
 #endif
+}
 
-	for (i = 0; i < ARRAY_SIZE(offenburg_lcm); i++) {
-		if (!strcmp(offenburg_lcm[i].lcm_name, screen)) {
-			offenburg_lcd_device = *offenburg_lcm[i].lcm_info;
-			goto ok;
-		}
-	}
-	printk (KERN_WARNING "LCM in FDT not found, using default CMO G070Y2L01");
+static int __init init_lcm(void)
+{
+	offenburg_lcd_device = *get_lcm_info();
 
-ok:
 	return  gpio_request(TT_VGPIO_LCD_RESET, "LCD RESET")   ||
 		gpio_request(TT_VGPIO_LCD_PWR_ON, "LCD PWR ON") ||
 		gpio_request(TT_VGPIO_LCD_STBY, "LCD STBY")     ||

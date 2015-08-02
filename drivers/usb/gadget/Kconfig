@@ -969,6 +969,13 @@ config USB_ANDROID_ROUTEINSTRUCTION
 	  Enabling this feature allows HID route instruction events to be
 	  received by the Android gadget. The events are read from /dev/fhidx.
 
+config USB_ANDROID_ECM
+	boolean "Android gadget ECM function"
+	depends on USB_ANDROID
+	help
+	  Provides CDC Ethernet Control Module (ECM) function for
+	  android gadget driver.
+
 config USB_CDC_COMPOSITE
 	tristate "CDC Composite Device (Ethernet and ACM)"
 	depends on NET

@@ -106,21 +106,25 @@ obj-$(CONFIG_MACH_OVERO)		+= board-overo.o \
 obj-$(CONFIG_MACH_STRASBOURG)		+= board-strasbourg.o \
 					   board-strasbourg-camera.o \
 					   board-strasbourg-psupply.o \
+					   gpio_cache.o \
 					   mfd_feat.o \
 					   mmc-twl4030.o \
 					   twl4030.o
 obj-$(CONFIG_MACH_STRASBOURG_A2)	+= board-strasbourg-a2.o \
 					   board-strasbourg-camera.o \
 					   board-strasbourg-psupply.o \
+					   gpio_cache.o \
 					   mfd_feat.o \
 					   mmc-twl4030.o \
 					   twl4030.o
 obj-$(CONFIG_MACH_STRASBOURG_XENIA)	+= board-strasbourg-xenia.o \
 					   board-strasbourg-camera.o \
 					   board-strasbourg-psupply.o \
+					   gpio_cache.o \
 					   mmc-twl4030.o \
 					   twl4030.o
 obj-$(CONFIG_MACH_SANTIAGO)		+= board-santiago.o \
+					   gpio_cache.o \
 					   mmc-twl4030.o
 obj-$(CONFIG_MACH_MONOPOLI)		+= board-monopoli.o \
 					   mmc-twl4030.o

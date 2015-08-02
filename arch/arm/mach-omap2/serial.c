@@ -50,9 +50,6 @@
 #define UART_OMAP_NO_EMPTY_FIFO_READ_IP_REV	0x52
 #define UART_OMAP_WER		0x17	/* Wake-up enable register */
 
-#define UART_ERRATA_FIFO_FULL_ABORT	(0x1 << 0)
-#define UART_ERRATA_i202_MDR1_ACCESS	(0x1 << 1)
-
 #define DEFAULT_TIMEOUT (0 * HZ)
 
 #define MAX_UART_HWMOD_NAME_LEN		16
@@ -1001,6 +998,7 @@ void __init omap_serial_init_port(int port, struct omap_uart_port_info *info)
 	omap_up.flags = UPF_BOOT_AUTOCONF | UPF_SHARE_IRQ;
 	omap_up.dma_rx_buf_size = info->dma_rx_buf_size;
 	omap_up.dma_rx_timeout = info->dma_rx_timeout;
+	omap_up.hwmod_name = info->hwmod_name;
 	/**
 	 * Errata 2.15: [UART]:Cannot Acknowledge Idle Requests
 	 * in Smartidle Mode When Configured for DMA Operations.
@@ -1064,10 +1062,6 @@ void __init omap_serial_init_port(int port, struct omap_uart_port_info *info)
 		device_init_wakeup(&od->pdev.dev, true);
 		DEV_CREATE_FILE(&od->pdev.dev, &dev_attr_sleep_timeout);
 	}
-
-	/* Enable the MDR1 errata for OMAP3 */
-	if (cpu_is_omap34xx())
-		uart->errata |= UART_ERRATA_i202_MDR1_ACCESS;
 }
 
 /**

@@ -1,0 +1,13 @@
+# Copyright (C) 2013 TomTom BV <http://www.tomtom.com/>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+config TOMTOM_LM26
+	tristate "LM26 Temperature sensor driver"
+	default n
+	depends on TOMTOM_DRIVERS && TWL4030_MADC
+	help
+          This option enables support for the TI temperature sensor.
+

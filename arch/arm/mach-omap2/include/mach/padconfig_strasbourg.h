@@ -255,8 +255,8 @@
 	PC_DEFINE(CP(I2C2_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
 	PC_DEFINE(CP(I2C3_SCL),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
 	PC_DEFINE(CP(I2C3_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
-	PC_DEFINE(CP(I2C4_SCL),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
-	PC_DEFINE(CP(I2C4_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
+	PC_DEFINE(CP(I2C4_SCL),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE7)                        \
+	PC_DEFINE(CP(I2C4_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE7)                        \
                                                                                                                \
 	/* MCBSP2 lines */                                                                                     \
 	PC_DEFINE(CP(MCBSP2_CLKX),   PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0) /* MCBSP2_CLK */       \

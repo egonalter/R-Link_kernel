@@ -58,9 +58,25 @@ int dsa_verify_hash( unsigned char *hash, unsigned char *sig, int keyidx )
 		return -ENOENT;
 
 	mpi_set_buffer( &d, hash,	SHA1_DIGEST_SIZE, 0);
+
+	/* the kernel may be unsigned. because of this, sig[1] could
+	 * contain a random number which would trigger mpi_set_buffer()
+	 * into resizing our structures, which are allocated on the stack,
+	 * crashing the kernel (see HESASW-399).
+	 *
+	 * this sanity check prevents such resizing. random numbers would
+	 * anyway fail the signature check later in this function.
+	 */
+	if (sig[1] > N)
+		return -ENOENT;
+
 	mpi_set_buffer( &r, &sig[2],	sig[1]/8, 0);
 
 	sig += sig[1]/8+2;
+
+	/* same comment of above (see HESASW-399) */
+	if (sig[1] > N)
+		return -ENOENT;
 
 	mpi_set_buffer( &s, &sig[2],	sig[1]/8, 0);
 

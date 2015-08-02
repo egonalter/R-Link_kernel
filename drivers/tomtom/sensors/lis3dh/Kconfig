@@ -1,0 +1,15 @@
+# drivers/tomtom/sensors/lis3dh/Kconfig
+#
+# Copyright (C) 2011 TomTom BV <http://www.tomtom.com/>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+
+config TOMTOM_LIS3DH
+	tristate "STMicroelectronics LIS3DH Three-axis accelerometer driver"
+	default n
+	depends on TOMTOM_DRIVERS
+	help
+          This option enables support for the STMicroelectronics LIS3DH Three-axis accelerometer.
+

@@ -60,6 +60,7 @@ obj-$(CONFIG_USB_ANDROID_ADB)	+= f_adb.o
 obj-$(CONFIG_USB_ANDROID_MASS_STORAGE)	+= f_mass_storage.o
 obj-$(CONFIG_USB_ANDROID_MTP)	+= f_mtp.o
 obj-$(CONFIG_USB_ANDROID_RNDIS)	+= f_rndis.o u_ether.o
+obj-$(CONFIG_USB_ANDROID_ECM)	+= f_ecm.o u_ether.o
 obj-$(CONFIG_USB_ANDROID_VDC)	+= f_vdc.o
 obj-$(CONFIG_USB_ANDROID_HIDC)	+= f_hidc.o \
 								   f_hidc_panel.o \

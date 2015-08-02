@@ -30,6 +30,7 @@
  */
 
 #include <linux/init.h>
+#include <linux/interrupt.h>
 #include <linux/spinlock.h>
 #include <linux/list.h>
 #include <linux/delay.h>
@@ -225,6 +226,48 @@ static void omap_dm_timer_write_reg(struct omap_dm_timer *timer, u32 reg,
 			cpu_relax();
 	writel(value, timer->io_base + (reg & 0xff));
 }
+
+void omap_dm_timer_read_regs(struct omap_dm_timer *timer, u32 *regs, int numregs)
+{
+	u32 reg;
+	int i;
+
+	reg = _OMAP_TIMER_OCP_CFG_OFFSET;
+	for (i = 0; i < numregs && reg <= _OMAP_TIMER_TICK_INT_MASK_COUNT_OFFSET; i++, regs++) {
+		*regs = omap_dm_timer_read_reg(timer, reg | (WP_NONE << WPSHIFT));
+		reg += 4;
+	}
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_read_regs);
+
+void omap_dm_timer_write_regs(struct omap_dm_timer *timer, const u32 *regs, int numregs)
+{
+	u32 reg;
+	int i;
+
+	reg = _OMAP_TIMER_OCP_CFG_OFFSET;
+	for (i = 0; i < numregs && reg <= _OMAP_TIMER_TICK_INT_MASK_COUNT_OFFSET; i++, regs++) {
+		omap_dm_timer_write_reg(timer, reg | (WP_NONE << WPSHIFT), *regs);
+		reg += 4;
+	}
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_write_regs);
+
+void omap_dm_timer_dump_regs(struct omap_dm_timer *timer)
+{
+	u32 reg, regs[19];
+	int i;
+
+	omap_dm_timer_read_regs(timer, regs, ARRAY_SIZE(regs));
+
+	reg = _OMAP_TIMER_OCP_CFG_OFFSET;
+	for (i = 0; i < ARRAY_SIZE(regs); i++) {
+		printk(KERN_ERR "0x%08x: 0x%08x\n", reg, regs[i]);
+		reg += 4;
+	}
+
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_dump_regs);
 
 static void omap_dm_timer_wait_for_reset(struct omap_dm_timer *timer)
 {
@@ -465,6 +508,20 @@ void omap_dm_timer_start(struct omap_dm_timer *timer)
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_start);
 
+u32 omap_dm_timer_get_ctrl(struct omap_dm_timer *timer)
+{
+	u32 l;
+	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_CTRL_REG);
+	return l;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_get_ctrl);
+
+void omap_dm_timer_set_ctrl(struct omap_dm_timer *timer, u32 l)
+{
+	omap_dm_timer_write_reg(timer, OMAP_TIMER_CTRL_REG, l);
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_set_ctrl);
+
 void omap_dm_timer_stop(struct omap_dm_timer *timer)
 {
 	u32 l;
@@ -550,6 +607,23 @@ void omap_dm_timer_set_match(struct omap_dm_timer *timer, int enable,
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_match);
 
+unsigned int omap_dm_timer_get_match(struct omap_dm_timer *timer)
+{
+	u32 match_val;
+	unsigned long flags;
+
+	if (!timer)
+		return -EINVAL;
+
+	spin_lock_irqsave(&dm_timer_lock, flags);
+	omap_dm_timer_enable(timer);
+	match_val = omap_dm_timer_read_reg(timer, OMAP_TIMER_MATCH_REG);
+	omap_dm_timer_disable(timer);
+	spin_unlock_irqrestore(&dm_timer_lock, flags);
+	return match_val;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_get_match);
+
 void omap_dm_timer_set_pwm(struct omap_dm_timer *timer, int def_on,
 			   int toggle, int trigger)
 {
@@ -588,6 +662,29 @@ void omap_dm_timer_set_int_enable(struct omap_dm_timer *timer,
 	omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, value);
 }
 EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_enable);
+
+int omap_dm_timer_set_int_disable(struct omap_dm_timer *timer,
+				 unsigned int value)
+{
+	u32 l;
+	unsigned long flags;
+
+	if (!timer)
+		return -EINVAL;
+
+	spin_lock_irqsave(&dm_timer_lock, flags);
+
+	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_WAKEUP_EN_REG);
+	l &= ~value;
+	omap_dm_timer_write_reg(timer, OMAP_TIMER_WAKEUP_EN_REG, l);
+	l = omap_dm_timer_read_reg(timer, OMAP_TIMER_INT_EN_REG);
+	l &= ~value;
+	omap_dm_timer_write_reg(timer, OMAP_TIMER_INT_EN_REG, l);
+
+	spin_unlock_irqrestore(&dm_timer_lock, flags);
+	return 0;
+}
+EXPORT_SYMBOL_GPL(omap_dm_timer_set_int_disable);
 
 unsigned int omap_dm_timer_read_status(struct omap_dm_timer *timer)
 {

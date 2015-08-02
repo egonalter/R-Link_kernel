@@ -635,6 +635,7 @@ __tagtable(ATAG_SERIAL, parse_tag_serialnr);
 static int __init parse_tag_revision(const struct tag *tag)
 {
 	system_rev = tag->u.revision.rev;
+	printk("System revision: %04x\n", system_rev);
 	return 0;
 }
 
@@ -642,7 +643,25 @@ __tagtable(ATAG_REVISION, parse_tag_revision);
 
 static int __init parse_tag_cmdline(const struct tag *tag)
 {
+	int pos;
+
 	strlcpy(default_command_line, tag->u.cmdline.cmdline, COMMAND_LINE_SIZE);
+
+	pos = strlen(default_command_line);
+	if (default_command_line[pos - 1] == '\n') {
+		default_command_line[pos - 1] = 0;
+		pos--;
+	}
+
+#ifdef CONFIG_CMDLINE_EXTEND
+	printk(KERN_INFO "extending cmdline with \"%s\"\n", CONFIG_CMDLINE);
+	strlcat(default_command_line, " ", COMMAND_LINE_SIZE - pos);
+	strlcat(default_command_line, CONFIG_CMDLINE, COMMAND_LINE_SIZE - pos - 1);
+#endif
+#ifdef CONFIG_CMDLINE_OVERWRITE
+	printk(KERN_INFO "replacing cmdline with \"%s\"\n", CONFIG_CMDLINE);
+	strlcpy(default_command_line, CONFIG_CMDLINE, COMMAND_LINE_SIZE);
+#endif
 	return 0;
 }
 

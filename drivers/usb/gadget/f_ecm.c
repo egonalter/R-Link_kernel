@@ -24,6 +24,7 @@
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/etherdevice.h>
+#include <linux/usb/android_composite.h>
 
 #include "u_ether.h"
 
@@ -822,6 +823,9 @@ int __init ecm_bind_config(struct usb_configuration *c, u8 ethaddr[ETH_ALEN])
 	ecm->port.func.setup = ecm_setup;
 	ecm->port.func.disable = ecm_disable;
 
+	/* start disabled */
+	ecm->port.func.disabled = 1;
+
 	status = usb_add_function(c, &ecm->port.func);
 	if (status) {
 		ecm_string_defs[1].s = NULL;
@@ -829,3 +833,25 @@ int __init ecm_bind_config(struct usb_configuration *c, u8 ethaddr[ETH_ALEN])
 	}
 	return status;
 }
+static u8 ethaddr[ETH_ALEN] = { 11, 22, 33, 44, 55, 66 };
+
+int ecm_function_bind_config(struct usb_configuration *c)
+{
+	int ret = gether_setup(c->cdev->gadget, ethaddr);
+	if (ret == 0)
+		ret = ecm_bind_config(c, ethaddr);
+	return ret;
+}
+
+static struct android_usb_function ecm_function = {
+	.name = "cdc_ethernet",
+	.bind_config = ecm_function_bind_config,
+};
+
+static int __init init(void)
+{
+	printk(KERN_INFO "f_ecm init\n");
+	android_register_function(&ecm_function);
+	return 0;
+}
+module_init(init);

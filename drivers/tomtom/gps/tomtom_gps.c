@@ -17,7 +17,9 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/interrupt.h>
+#include <linux/delay.h>
 #include <linux/rfkill.h>
+#include <linux/regulator/consumer.h>
 
 #include <plat/gps.h>
 #include <asm/irq.h>
@@ -41,7 +43,62 @@ typedef struct {
 	struct generic_gps_info *machinfo;
 	int gps_irq;
 	struct rfkill *rfk_data;
+	struct regulator *regulator;
 } tomtom_gps_data_t;
+
+static inline struct gps_device *gps_get_device(struct device *dev)
+{
+	return platform_get_drvdata(container_of(dev, struct platform_device, dev));
+}
+
+static inline tomtom_gps_data_t *gps_get_data(struct gps_device *gps_dev)
+{
+	return dev_get_drvdata(&gps_dev->dev);
+}
+
+static ssize_t tomtom_gps_coldboot_show(struct device *dev,
+                                        struct device_attribute *attr, char *buf)
+{
+	struct gps_device *gpsd = gps_get_device(dev);
+
+	if (!mutex_trylock(&gpsd->update_sem))
+		return sprintf(buf, "busy\n");
+
+	mutex_unlock(&gpsd->update_sem);
+	return sprintf(buf, "available\n");
+}
+
+static ssize_t tomtom_gps_coldboot_set(struct device *dev, struct device_attribute *attr,
+                                       const char *buf, size_t count)
+{
+	struct gps_device *gpsd = gps_get_device(dev);
+	tomtom_gps_data_t *gps_drv_data	= gps_get_data(gpsd);
+	struct regulator *reg = gps_drv_data->regulator;
+	unsigned long delay;
+
+	if (strict_strtoul(buf, 10, &delay)) {
+		dev_err(dev, "Invalid time for coldboot reset\n");
+		return count;
+	}
+
+	mutex_lock(&gpsd->update_sem);
+
+	if (gps_drv_data->machinfo->coldboot_start(dev, reg)) {
+		dev_err(dev, "unable to start coldboot reset\n");
+		goto error;
+	}
+
+	if (msleep_interruptible(delay * 1000))
+		dev_err(dev, "coldboot reset sleep interrupted\n");
+
+	if (gps_drv_data->machinfo->coldboot_finish(dev, reg))
+		dev_err(dev, "unable to finish coldboot reset\n");
+
+error:
+	mutex_unlock(&gpsd->update_sem);
+	return count;
+}
+static DEVICE_ATTR(coldboot, 0644, tomtom_gps_coldboot_show, tomtom_gps_coldboot_set);
 
 static int tomtom_gps_rfkill_set_block(void *data, bool blocked)
 {
@@ -140,6 +197,9 @@ static int tomtom_gps_suspend(struct platform_device *pdev, pm_message_t state)
 
 	gps_drv_data->flags |= TOMTOM_GPS_SUSPENDED;
 
+	if (gps_drv_data->machinfo->suspend)
+		gps_drv_data->machinfo->suspend();
+
 	return 0;
 }
 
@@ -155,6 +215,9 @@ static int tomtom_gps_resume(struct platform_device *pdev)
 
 	gps_drv_data = gps_get_data(gpsd);
 	BUG_ON(!gps_drv_data);
+
+	if (gps_drv_data->machinfo->resume)
+		gps_drv_data->machinfo->resume();
 
 	gps_drv_data->flags &= ~TOMTOM_GPS_SUSPENDED;
 	gps_drv_data->flags |= TOMTOM_GPS_RESUMED;
@@ -233,7 +296,7 @@ static tomtom_gps_data_t * tomtom_gps_init_drv_data(struct platform_device *pdev
 	machinfo = pdev->dev.platform_data;
 	BUG_ON(!machinfo);
 
-	gps_drv_data = kzalloc(GFP_KERNEL, sizeof(tomtom_gps_data_t));
+	gps_drv_data = kzalloc(sizeof(tomtom_gps_data_t), GFP_KERNEL);
 	if (NULL == gps_drv_data)
 		return ERR_PTR(-ENOMEM);
 
@@ -305,9 +368,21 @@ static int tomtom_gps_probe(struct platform_device *pdev)
 		goto rfkill_register_failed;
 	}
 
+	gps_drv_data->regulator = regulator_get(&pdev->dev, "vdd");
+	if (gps_drv_data->regulator)
+		regulator_enable(gps_drv_data->regulator);
+
+	if (gps_drv_data->machinfo->coldboot_start &&
+	    gps_drv_data->machinfo->coldboot_finish &&
+	    gps_drv_data->regulator &&
+	    device_create_file(&pdev->dev, &dev_attr_coldboot))
+		goto sysfs_register_failed;
+
 	printk(KERN_INFO PFX "Initialized.\n");
 	return 0;
 
+sysfs_register_failed:
+	rfkill_unregister(gps_drv_data->rfk_data);
 rfkill_register_failed:
 	rfkill_destroy(gps_drv_data->rfk_data);
 rfkill_alloc_failed:
@@ -331,6 +406,13 @@ static int tomtom_gps_remove(struct platform_device *pdev)
 
 	gps_drv_data = gps_get_data(gpsd);
 	BUG_ON(!gps_drv_data);
+
+	device_remove_file(&pdev->dev, &dev_attr_coldboot);
+
+	if (gps_drv_data->regulator) {
+		regulator_disable(gps_drv_data->regulator);
+		regulator_put(gps_drv_data->regulator);
+	}
 
 	rfkill_unregister(gps_drv_data->rfk_data);
 	rfkill_destroy(gps_drv_data->rfk_data);

@@ -1707,10 +1707,8 @@ static int omap_vout_mmap(struct file *file, struct vm_area_struct *vma)
 	q->bufs[i]->baddr = vma->vm_start;
 
 	vma->vm_flags |= VM_RESERVED;
-	if (cacheable_buffers == 0) {
+	if (cacheable_buffers == 0)
 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
-		printk(KERN_DEBUG "Requested uncached buffers\n");
-	 }
 
 	vma->vm_ops = &omap_vout_vm_ops;
 	vma->vm_private_data = (void *) vout;

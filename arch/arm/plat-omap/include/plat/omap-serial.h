@@ -100,6 +100,10 @@
 
 #define MSR_SAVE_FLAGS		UART_MSR_ANY_DELTA
 
+#define UART_ERRATA_FIFO_FULL_ABORT	BIT(0)
+#define UART_ERRATA_i202_MDR1_ACCESS	BIT(1)
+#define UART_ERRATA_i291_DMA_FORCEIDLE	BIT(2)
+
 struct omap_uart_port_info {
 	unsigned long		reserved1;	/* Reserved 1 */
 	void __iomem		*membase;	/* ioremap cookie or NULL */
@@ -116,6 +120,7 @@ struct omap_uart_port_info {
 	unsigned int		dma_rx_buf_size;
 	unsigned int		dma_rx_timeout;
 	unsigned			rts_mux_driver_control:1;
+	const char		*hwmod_name;	/* name used to lookup the hwmod */
 };
 
 struct uart_omap_dma {
@@ -164,6 +169,9 @@ struct uart_omap_port {
 	unsigned char		msr_saved_flags;
 	char			name[20];
 	unsigned long		port_activity;
+	u32			errata;
+
+	struct omap_hwmod*	hwmod;
 };
 
 void omap_uart_mdr1_errataset(int uart_no, u8 mdr1_val,

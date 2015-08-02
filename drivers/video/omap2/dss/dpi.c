@@ -57,7 +57,7 @@ static void dpi_set_timings(struct omap_dss_device *dssdev,
 /* Enables spread spectrum for the DSI clock */
 static void dsi_pll_enable_ssc(void)
 {
-    omap_ctrl_writel(0x84863, OMAP343X_CONTROL_DSS_DPLL_SPREADING_FREQ);
+    omap_ctrl_writel(0xcf04f, OMAP343X_CONTROL_DSS_DPLL_SPREADING_FREQ);
     omap_ctrl_writel(OMAP343X_SPREADING_ENABLE, OMAP343X_CONTROL_DSS_DPLL_SPREADING);
 }
 
