@@ -2554,6 +2554,7 @@ static int twl4030_probe(struct platform_device *pdev)
 	twl4030_socdev = socdev;
 	twl4030_init(socdev);
 
+	printk(KERN_INFO "%s completed\n", __func__);
 	return 0;
 }
 

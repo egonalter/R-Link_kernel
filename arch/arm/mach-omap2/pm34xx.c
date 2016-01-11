@@ -142,7 +142,7 @@ static struct prm_setup_vc prm_setup = {
 	 * WA: Set PRM_VC_I2C_CFG[SREN] to '0' to allow I2C4 driving a high
 	 * state between two I2C commands
 	 */
-	.vdd_i2c_cfg = OMAP3430_MCODE_SHIFT | OMAP3430_HSEN | ~OMAP3430_SREN,
+	.vdd_i2c_cfg = OMAP3430_MCODE_SHIFT | OMAP3430_HSEN,
 };
 
 static inline void omap3_per_save_context(void)
@@ -464,6 +464,10 @@ void omap_sram_idle(void)
 #if defined(CONFIG_TIWLAN_SDIO) || defined(CONFIG_BCM4329) || defined(CONFIG_BCM4329_EMBEDDED)
 	u32 fclk_status = 0;
 #endif
+#if defined(CONFIG_MACH_STRASBOURG)
+	u32 i2c4_scl_save;
+	u32 i2c4_sda_save;
+#endif
 
 	if (!_omap_sram_idle)
 		return;
@@ -559,6 +563,27 @@ void omap_sram_idle(void)
 		disable_smartreflex(SR1);
 	if (core_next_state <= PWRDM_POWER_RET)
 		disable_smartreflex(SR2);
+#endif
+
+#if defined(CONFIG_MACH_STRASBOURG)
+	/* 
+	 * Before suspending, set the I2C4 pins (which are dedicated to SmartReflex) to
+	 * SAFE mode, in order to circumvent an issue where the I2C4 SDA line would on
+	 * some targets freeze in an active low state.
+	 */
+	if (mpu_next_state <= PWRDM_POWER_RET && core_next_state <= PWRDM_POWER_RET) {
+		const u32 safe_value =
+			  1 <<  8  /* Input enable */
+			| 7 <<  0; /* Mode 7 (SAFE mode) */
+
+
+		/* We'll save the current settings, so we can put them back later */
+		i2c4_scl_save = omap_ctrl_readw(OMAP3_PADCONF_I2C4_SCL);
+		i2c4_sda_save = omap_ctrl_readw(OMAP3_PADCONF_I2C4_SDA);
+
+		omap_ctrl_writew(safe_value, OMAP3_PADCONF_I2C4_SCL);
+		omap_ctrl_writew(safe_value, OMAP3_PADCONF_I2C4_SDA);
+	}
 #endif
 
 	/* CORE */
@@ -709,6 +734,15 @@ void omap_sram_idle(void)
 						0x0, PLL_MOD, CM_AUTOIDLE);
 		set_dpll3_volt_freq(1);
 	}
+
+#ifdef CONFIG_MACH_STRASBOURG
+	/* Reset the I2C4 PadConf settings to their original values, if needed. */
+	if (mpu_next_state <= PWRDM_POWER_RET && core_next_state <= PWRDM_POWER_RET) {
+		omap_ctrl_writew(i2c4_scl_save, OMAP3_PADCONF_I2C4_SCL);
+		omap_ctrl_writew(i2c4_sda_save, OMAP3_PADCONF_I2C4_SDA);
+	}
+#endif
+
 #ifndef CONFIG_OMAP_SMARTREFLEX_CLASS1P5
 	/*
 	 * Enable smartreflex after WFI. Only needed if we entered

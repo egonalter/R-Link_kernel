@@ -48,6 +48,7 @@
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/timer.h>
+#define TIMER_IN_USE        0xfeedface
 
 u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
 
@@ -366,6 +367,7 @@ static void internal_add_timer(struct tvec_base *base, struct timer_list *timer)
 	/*
 	 * Timers are FIFO:
 	 */
+	timer->timer_in_use = TIMER_IN_USE;
 	list_add_tail(&timer->entry, vec);
 }
 
@@ -547,6 +549,16 @@ static void __init_timer(struct timer_list *timer,
 			 const char *name,
 			 struct lock_class_key *key)
 {
+	/* Check to make sure the timer is not in the list already */
+	if (timer->timer_in_use == TIMER_IN_USE)
+	{
+		printk(KERN_WARNING "Timer may be in use already: %p %p %p %p",
+			timer->entry.next,
+			timer->entry.prev,
+			timer->base,
+			__raw_get_cpu_var(tvec_bases));
+		dump_stack();
+	}
 	timer->entry.next = NULL;
 	timer->base = __raw_get_cpu_var(tvec_bases);
 #ifdef CONFIG_TIMER_STATS
@@ -593,6 +605,7 @@ static inline void detach_timer(struct timer_list *timer,
 	debug_deactivate(timer);
 
 	__list_del(entry->prev, entry->next);
+	timer->timer_in_use = 0;
 	if (clear_pending)
 		entry->next = NULL;
 	entry->prev = LIST_POISON2;

@@ -32,6 +32,7 @@
 #include <linux/err.h>
 #include <linux/clk.h>
 #include <linux/io.h>
+#include "../../mach-omap2/mux.h"
 
 #include <linux/spi/spi.h>
 
@@ -1505,6 +1506,15 @@ static int omap2_mcspi_suspend(struct platform_device *pdev, pm_message_t messag
 		if (mcspi->slave_buffered_device)
 			omap2_mcspi_stop_slave_dma(mcspi->slave_buffered_device);
 		mcspi_write_reg(master, OMAP2_MCSPI_CHCTRL0, 0);
+
+		/* HS-2318: Set SPI pins in safe mode to prevent dip when switching to master mode */
+		omap_mux_init_signal("mcspi1_clk",OMAP_PIN_INPUT | OMAP_MUX_MODE7);
+		omap_mux_init_signal("mcspi1_cs0",OMAP_PIN_INPUT | OMAP_MUX_MODE7);
+		omap_mux_init_signal("mcspi1_somi",OMAP_PIN_INPUT | OMAP_MUX_MODE7);
+		omap_mux_init_signal("mcspi1_simo",OMAP_PIN_INPUT | OMAP_MUX_MODE7);
+
+		/* Switch to master mode is required for OFF mode */
+		omap2_mcspi_set_master_mode (master);
 		omap2_mcspi_disable_clocks(mcspi);
 	}
 
@@ -1530,7 +1540,13 @@ static int omap2_mcspi_resume(struct platform_device *pdev)
 			l = mcspi_read_reg(master, OMAP2_MCSPI_RX0);
 			l = mcspi_read_reg(master, OMAP2_MCSPI_CHSTAT0);
 		}
-
+		omap2_mcspi_set_slave_mode (master);
+		
+		omap_mux_init_signal("mcspi1_clk",OMAP_PIN_INPUT_PULLDOWN | OMAP_MUX_MODE0);
+		omap_mux_init_signal("mcspi1_cs0",OMAP_PIN_INPUT_PULLDOWN | OMAP_MUX_MODE0);
+		omap_mux_init_signal("mcspi1_somi",OMAP_PIN_OUTPUT | OMAP_MUX_MODE0);
+		omap_mux_init_signal("mcspi1_simo",OMAP_PIN_INPUT_PULLDOWN | OMAP_MUX_MODE0);
+		
 		mcspi_write_reg(master, OMAP2_MCSPI_CHCTRL0, OMAP2_MCSPI_CHCTRL_EN);
 		if (mcspi->slave_buffered_device)
 			omap2_mcspi_start_slave_dma(mcspi->slave_buffered_device);

@@ -25,6 +25,7 @@
 #include <linux/init.h>
 #include <linux/io.h>
 #include <linux/kernel.h>
+#include <linux/bootmem.h>
 #include <linux/platform_device.h>
 #include <linux/i2c/twl.h>
 #include <linux/lp855x.h>
@@ -383,7 +384,7 @@ static struct regulator_init_data strasbourg_vmmc1 = {
 					| REGULATOR_CHANGE_STATUS,
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(strasbourg_vmmc1_supply),
-	.consumer_supplies	= &strasbourg_vmmc1_supply,
+	.consumer_supplies	= strasbourg_vmmc1_supply,
 };
 
 /* VDAC for DSS driving S-Video (8 mA unloaded, max 65 mA) */
@@ -504,7 +505,7 @@ static struct regulator_init_data strasbourg_vaux4 = {
 		.boot_on		= true,
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(strasbourg_vaux4_supply),
-	.consumer_supplies	= &strasbourg_vaux4_supply,
+	.consumer_supplies	= strasbourg_vaux4_supply,
 };
 
 /* mmc2 (WLAN) and Bluetooth don't use twl4030 regulators */
@@ -589,11 +590,6 @@ static void __init strasbourg_i2c_init(void)
 		/* Program (bit 7)=1 to disable internal pull-up on I2C3 */
 		prog_io |= OMAP3630_PRG_I2C3_PULLUPRESX;
 		omap_ctrl_writel(prog_io, OMAP36XX_CONTROL_PROG_IO2);
-
-		prog_io = omap_ctrl_readl(OMAP36XX_CONTROL_PROG_IO_WKUP1);
-		/* Program (bit 5)=1 to disable internal pull-up on I2C4(SR) */
-		prog_io |= OMAP3630_PRG_SR_PULLUPRESX;
-		omap_ctrl_writel(prog_io, OMAP36XX_CONTROL_PROG_IO_WKUP1);
 	}
 
 	if (get_strasbourg_ver() == RENNES_B1_SAMPLE) {
@@ -785,12 +781,24 @@ static void strasbourg_kexec_reinit(void)
 }
 #endif
 
+static struct resource strasbourg_ram_console_resource = {
+	.flags		= IORESOURCE_MEM,
+};
+
+static struct platform_device strasbourg_ram_console_device = {
+	.name		= "ram_console",
+	.id		= -1,
+	.resource	= &strasbourg_ram_console_resource,
+	.num_resources	= 1,
+};
+
 /**** */
 
 static struct platform_device *strasbourg_devices[] __initdata = {
 	&offenburg_dss_device,
 	&offenburg_usb_stat_device,
 	&strasbourg_hwmon_device,
+	&strasbourg_ram_console_device,
 	&strasbourg_suicide_alm_device
 };
 
@@ -914,6 +922,11 @@ static struct omap_board_mux board_mux_stuttgart_b1[] __initdata = {
 	PADCONFIG_SETTINGS_KERNEL_STUTTGART_B1
 	
 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+};
+
+static const struct mfd_feat ram_console_feats[] = {
+	MFD_1_0((void *) 0x8fffc000),
+	MFD_DEFAULT((void *) 0x9fffc000),
 };
 
 static struct mfd_feat mux_feats[] = {
@@ -1245,6 +1258,7 @@ static void __init strasbourg_init(void)
 	const struct usbhs_omap_board_data* usbhs_bdata;
 	struct omap_board_mux *mux;
 	bool mmc_strength = 1;
+	unsigned long ram_console_base;
 
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 	/*
@@ -1255,6 +1269,10 @@ static void __init strasbourg_init(void)
 	if (get_strasbourg_ver() < STRASBOURG_B2_SAMPLE)
 		clk_disable(gpt10_fck);
 #endif
+
+	ram_console_base = (unsigned long) mfd_feature(ram_console_feats);
+	strasbourg_ram_console_resource.start = ram_console_base;
+	strasbourg_ram_console_resource.end = ram_console_base + SZ_16K - 1;
 
 	mux = mfd_feature(mux_feats);
 
@@ -1318,6 +1336,8 @@ static void __init strasbourg_init(void)
 
 static void __init strasbourg_map_io(void)
 {
+	unsigned long ram_console_base;
+
 	/* NOTE: omap2_map_common_io intializes the VRAM areas
 	 * we need to set the vram size earlier */
 #ifndef CONFIG_FB_OMAP_BOOTLOADER_INIT
@@ -1328,6 +1348,10 @@ static void __init strasbourg_map_io(void)
 
 	omap2_set_globals_343x();
 	omap2_map_common_io();
+
+	ram_console_base = (unsigned long) mfd_feature(ram_console_feats);
+	if (reserve_bootmem(ram_console_base, SZ_16K, BOOTMEM_EXCLUSIVE))
+		printk(KERN_WARNING "Unable to reserve memory for RAM console\n");
 }
 
 MACHINE_START(STRASBOURG_A2, "Strasbourg A2")

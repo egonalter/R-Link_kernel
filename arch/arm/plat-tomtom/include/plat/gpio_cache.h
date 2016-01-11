@@ -3,6 +3,7 @@
 
 struct gpio_cache {
 	unsigned nr;
+	unsigned int msdelay;
 	void *state;
 };
 

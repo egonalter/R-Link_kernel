@@ -25,6 +25,7 @@ struct timer_list {
 #ifdef CONFIG_LOCKDEP
 	struct lockdep_map lockdep_map;
 #endif
+	int timer_in_use;
 };
 
 extern struct tvec_base boot_tvec_bases;

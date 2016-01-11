@@ -6,12 +6,11 @@
 #include <linux/mutex.h>
 #include <linux/gpio.h>
 #include <linux/kref.h>
+#include <linux/delay.h>
 
 #include <plat/gpio_cache.h>
 
-/* mach-omap2 */
-u16 omap_mux_get_gpio(int gpio);
-void omap_mux_set_gpio(u16 val, int gpio);
+#include "mux.h"
 
 #ifdef CONFIG_GPIO_CACHE
 
@@ -118,13 +117,17 @@ void gpio_cache_free(struct gpio_cache *gpio, unsigned int numgpio)
 int gpio_cache_set_out(struct gpio_cache *gpio, unsigned int numgpio, int val)
 {
 	struct gpio_state *state;
-	u16 mode = 4; /* gpio mode, output */
+	u16 mode = OMAP_MUX_MODE4; /* gpio mode, output */
 	int i;
 
 	for (i = 0; i < numgpio; i++, gpio++) {
 		state = gpio->state;
-		WARN_ON(!state || state->nr != gpio->nr);
+		if (!state) {
+			printk(KERN_WARNING "skipping uninitialized state nr. %d...\n", gpio->nr);
+			continue;
+		}
 
+		WARN_ON(state->nr != gpio->nr);
 		if (atomic_add_return(1, &state->in_use) > 1) {
 			atomic_dec(&state->in_use);
 			printk(KERN_WARNING "skipping in use state nr. %d...\n", gpio->nr);
@@ -132,7 +135,7 @@ int gpio_cache_set_out(struct gpio_cache *gpio, unsigned int numgpio, int val)
 		}
 
 		state->mode = omap_mux_get_gpio(gpio->nr);
-		omap_mux_set_gpio(gpio->nr, mode);
+		omap_mux_set_gpio(mode, gpio->nr);
 
 		state->val = gpio_get_value(gpio->nr);
 		gpio_set_value(gpio->nr, val);
@@ -149,8 +152,12 @@ void gpio_cache_restore(struct gpio_cache *gpio, unsigned int numgpio)
 	gpio += numgpio - 1;
 	for (i = numgpio; i > 0; i--, gpio--) {
 		state = gpio->state;
-		WARN_ON(!state || state->nr != gpio->nr);
+		if (!state) {
+			printk(KERN_WARNING "skipping uninitialized state nr. %d...\n", gpio->nr);
+			continue;
+		}
 
+		WARN_ON(state->nr != gpio->nr);
 		if (atomic_sub_return(1, &state->in_use) < 0) {
 			atomic_inc(&state->in_use);
 			printk(KERN_WARNING "skipping restore nr. %d\n", gpio->nr);
@@ -159,6 +166,11 @@ void gpio_cache_restore(struct gpio_cache *gpio, unsigned int numgpio)
 
 		gpio_set_value(gpio->nr, state->val);
 		omap_mux_set_gpio(state->mode, gpio->nr);
+
+		if (gpio->msdelay > 0) {
+			printk(KERN_DEBUG "waiting %d\n", gpio->msdelay);
+			msleep(gpio->msdelay);
+		}
 	}
 }
 

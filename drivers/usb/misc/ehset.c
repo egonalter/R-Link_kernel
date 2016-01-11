@@ -86,6 +86,32 @@
 #define TEST_SINGLE_STEP_GET_DEV_DESC	0x0107
 #define TEST_SINGLE_STEP_SET_FEATURE	0x0108
 
+static void suspend_ports_if_necessary(const struct usb_device *hub_udev)
+{
+	if (hub_udev->level != 0) {
+		int port;
+
+		pr_info("Test device is not plugged into root-hub; suspend all ports of the parent hub..");
+
+		/* Silence khubd */
+		hub_suspend_for_test(hub_udev);
+
+		/* The USB 2.0 spec, revision 2.0, states in chapter 11.24.2.13:
+		 *  "All enabled downstream facing ports of the hub containing the port to be tested must
+		 * be (selectively) suspended."
+		 */
+
+		for (port = 1; port <= hub_udev->maxchild; port++) {
+			if (hub_udev->children[port-1]) {
+				/* If child exists, send a suspend message */
+				usb_control_msg(hub_udev, usb_sndctrlpipe(hub_udev, 0),
+						USB_REQ_SET_FEATURE, USB_RT_PORT, USB_PORT_FEAT_SUSPEND,
+						port, NULL, 0, 1000);
+			}
+		}
+	}
+}
+
 static int ehset_probe(struct usb_interface *intf,
 		       const struct usb_device_id *id)
 {
@@ -96,23 +122,30 @@ static int ehset_probe(struct usb_interface *intf,
 	int port1 = dev->portnum;
 	int test_mode = le16_to_cpu(dev->descriptor.idProduct);
 
+	pr_info("Test device detected in port %d, at tier: %u", port1, dev->level);
+	pr_info("Starting USB test mode for PID 0x%x", test_mode);
+
 	switch (test_mode) {
 	case TEST_SE0_NAK:
+		suspend_ports_if_necessary(hub_udev);
 		status = usb_control_msg(hub_udev, usb_sndctrlpipe(hub_udev, 0),
 			USB_REQ_SET_FEATURE, USB_RT_PORT, USB_PORT_FEAT_TEST,
 			(3 << 8) | port1, NULL, 0, 1000);
 		break;
 	case TEST_J:
+		suspend_ports_if_necessary(hub_udev);
 		status = usb_control_msg(hub_udev, usb_sndctrlpipe(hub_udev, 0),
 			USB_REQ_SET_FEATURE, USB_RT_PORT, USB_PORT_FEAT_TEST,
 			(1 << 8) | port1, NULL, 0, 1000);
 		break;
 	case TEST_K:
+		suspend_ports_if_necessary(hub_udev);
 		status = usb_control_msg(hub_udev, usb_sndctrlpipe(hub_udev, 0),
 			USB_REQ_SET_FEATURE, USB_RT_PORT, USB_PORT_FEAT_TEST,
 			(2 << 8) | port1, NULL, 0, 1000);
 		break;
 	case TEST_PACKET:
+		suspend_ports_if_necessary(hub_udev);
 		status = usb_control_msg(hub_udev, usb_sndctrlpipe(hub_udev, 0),
 			USB_REQ_SET_FEATURE, USB_RT_PORT, USB_PORT_FEAT_TEST,
 			(4 << 8) | port1, NULL, 0, 1000);
@@ -148,6 +181,7 @@ static int ehset_probe(struct usb_interface *intf,
 		}
 		break;
 	case TEST_SINGLE_STEP_SET_FEATURE:
+		suspend_ports_if_necessary(hub_udev);
 		/* GetDescriptor's SETUP request -> 15secs delay -> IN & STATUS
 		 * Issue request to ehci root hub driver with portnum = 1
 		 */

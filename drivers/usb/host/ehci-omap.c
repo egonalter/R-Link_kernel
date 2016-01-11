@@ -140,7 +140,7 @@ static void omap_ehci_ulpi_write (struct platform_device *pdev, u8 port, u8 addr
 		cpu_relax();
 
 		if (time_after(jiffies, timeout)) {
-			dev_err(&pdev->dev, "phy %d ulpi write operation timed out\n", port);
+			dev_err(&pdev->dev, "phy %d ulpi write operation timed out on reg addr %u\n", port, addr);
 			/*
 			 * HACK: Right now there is no way out from this situation, the 
 			 * EHCI controller will stop working, so it's preferable to just reboot.

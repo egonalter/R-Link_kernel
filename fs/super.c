@@ -633,6 +633,11 @@ static void do_emergency_remount(struct work_struct *work)
 	printk("Emergency Remount complete\n");
 }
 
+void synchronous_emergency_remount(void)
+{
+	do_emergency_remount(NULL);
+}
+
 void emergency_remount(void)
 {
 	struct work_struct *work;

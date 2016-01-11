@@ -839,6 +839,21 @@ static void hub_quiesce(struct usb_hub *hub, enum hub_quiescing_type type)
 		cancel_work_sync(&hub->tt.clear_work);
 }
 
+/* Expose hub_quiesce() temporarily for EHSET */
+void hub_suspend_for_test(struct usb_device *hub_hdev)
+{
+	struct usb_hub *hub = hdev_to_hub(hub_hdev);
+
+	if (hub) {
+		dev_printk(KERN_INFO, &hub_hdev->dev, "Quiescing hub in test..");
+		hub_quiesce(hub, HUB_SUSPEND);
+	} else {
+		dev_printk(KERN_INFO, &hub_hdev->dev, "Couldn't convert hdev to hub");
+	}
+}
+EXPORT_SYMBOL(hub_suspend_for_test);
+
+
 /* caller has locked the hub device */
 static int hub_pre_reset(struct usb_interface *intf)
 {

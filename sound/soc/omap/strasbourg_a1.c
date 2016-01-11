@@ -626,6 +626,7 @@ static int __init strasbourg_a1_soc_init(void)
 	if (ret)
 		goto err1;
 
+	printk(KERN_INFO "%s completed\n", __func__);
 	return 0;
 
 err1:

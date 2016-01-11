@@ -93,10 +93,10 @@
 	/* The following settings are there to overcome TS problem */                                          \
                                                                                                                \
 	/* UART1 lines */                                                                                      \
-	PC_DEFINE(CP(UART1_CTS),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* GPS_RTS_SOC_CTS */  \
-	PC_DEFINE(CP(UART1_RTS),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* GPS_CTS_SOC_RTS */  \
-	PC_DEFINE(CP(UART1_RX),      PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* GPS_TX_SOC_RX */    \
-	PC_DEFINE(CP(UART1_TX),      PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* GPS_RX_SOC_TX */    \
+	PC_DEFINE(CP(UART1_CTS),     PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* GPS_RTS_SOC_CTS */  \
+	PC_DEFINE(CP(UART1_RTS),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_UP   | PC_MODE0 | PC_OFF_OUT_LOW)     /* GPS_CTS_SOC_RTS */  \
+	PC_DEFINE(CP(UART1_RX),      PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* GPS_TX_SOC_RX */    \
+	PC_DEFINE(CP(UART1_TX),      PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* GPS_RX_SOC_TX */    \
                                                                                                                \
 	/* UART2 lines */                                                                                      \
 	PC_DEFINE(CP(MCBSP3_CLKX),   PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* BT_RX */            \
@@ -110,7 +110,7 @@
 	PC_DEFINE(CP(GPMC_NBE0_CLE), PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* nBT_RST */          \
 	PC_DEFINE(CP(CAM_XCLKA),     PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE4) /* CAM_PWR_ON */       \
 	PC_DEFINE(CP(SDMMC2_DAT1),   PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE4) /* nCAM_RST */         \
-	PC_DEFINE(CP(MCBSP_CLKS),    PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* nGPS2_RESET */      \
+	PC_DEFINE(CP(MCBSP_CLKS),    PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4 | PC_OFF_IN_PULLDOWN) /* nGPS_RESET */      \
 	PC_DEFINE(CP(UART3_RTS_SD),  PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4) /* GPS_HOST_REQ */     \
                                                                                                                \
 	/* MCBSP1 lines */                                                                                     \
@@ -161,8 +161,8 @@
 
 #define PADCONFIG_SETTINGS_KERNEL_RENNES_B1    \
 	/* UART1 lines */                                                                                      \
-	PC_DEFINE(CP(UART1_CTS),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_RTS_SOC_CTS */  \
-	PC_DEFINE(CP(UART1_RTS),     PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_CTS_SOC_RTS */  \
+	PC_DEFINE(CP(UART1_CTS),     PC_INPUT  | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_IN_PULLDOWN) /* GPS_RTS_SOC_CTS */  \
+	PC_DEFINE(CP(UART1_RTS),     PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW)     /* GPS_CTS_SOC_RTS */  \
 	PC_DEFINE(CP(UART1_RX),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_TX_SOC_RX */    \
 	PC_DEFINE(CP(UART1_TX),      PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0 | PC_OFF_OUT_LOW) /* GPS_RX_SOC_TX */    \
                                                                                                                \
@@ -233,7 +233,7 @@
 	PC_DEFINE(CP(CAM_XCLKA),     PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* CAM_PWR_ON */       \
 	PC_DEFINE(CP(SDMMC2_DAT1),   PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nCAM_RST */         \
 	PC_DEFINE(CP(GPMC_NBE0_CLE), PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nBT_RST */          \
-	PC_DEFINE(CP(MCBSP_CLKS),    PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nGPS_RESET */       \
+	PC_DEFINE(CP(MCBSP_CLKS),    PC_OUTPUT | PC_PULL_ENA | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nGPS_RESET */       \
 	PC_DEFINE(CP(UART3_RTS_SD),  PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* GPS_HOST_REQ */     \
 	PC_DEFINE(CP(GPIO126),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* nAUTH_RST */        \
 	PC_DEFINE(CP(GPIO129),       PC_OUTPUT | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE4 | PC_OFF_OUT_LOW) /* CAM_ON */           \
@@ -300,8 +300,8 @@
 	PC_DEFINE(CP(I2C2_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
 	PC_DEFINE(CP(I2C3_SCL),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
 	PC_DEFINE(CP(I2C3_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE0)                        \
-	PC_DEFINE(CP(I2C4_SCL),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE7)                        \
-	PC_DEFINE(CP(I2C4_SDA),      PC_INPUT  | PC_PULL_DIS | PC_PULL_DOWN | PC_MODE7)                        \
+	PC_DEFINE(CP(I2C4_SCL),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0)                        \
+	PC_DEFINE(CP(I2C4_SDA),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0)                        \
 	PC_DEFINE(CP(I2C1_SCL),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0)                        \
 	PC_DEFINE(CP(I2C1_SDA),      PC_INPUT  | PC_PULL_ENA | PC_PULL_UP   | PC_MODE0)                        \
                                                                                                                \

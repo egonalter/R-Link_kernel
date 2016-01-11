@@ -1670,6 +1670,7 @@ static int __init alsa_rawmidi_init(void)
 	}
 	}
 #endif /* CONFIG_SND_OSSEMUL */
+	printk(KERN_INFO "%s completed\n", __func__);
 	return 0;
 }
 

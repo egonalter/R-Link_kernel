@@ -26,6 +26,7 @@
 #include <linux/vgpio.h>
 #include <linux/reboot.h>
 #include <linux/fs.h>
+#include <linux/syscalls.h> /* for sys_sync() */
 #include <plat/offenburg.h>
 #include <asm/io.h>
 
@@ -136,7 +137,10 @@ static int strasbourg_ps_bat_get_property(struct power_supply *psy,
 
 static void poweroff(struct work_struct *work)
 {
-	emergency_sync();
+
+	synchronous_emergency_remount();
+	sys_sync();
+	printk(KERN_EMERG "Filesystems synced.\n");
 	kernel_power_off();
 }
 static DECLARE_WORK(poweroff_work, poweroff);

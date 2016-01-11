@@ -513,6 +513,7 @@ static int __init alsa_hwdep_init(void)
 	snd_hwdep_proc_init();
 	snd_ctl_register_ioctl(snd_hwdep_control_ioctl);
 	snd_ctl_register_ioctl_compat(snd_hwdep_control_ioctl);
+	printk(KERN_INFO "%s completed\n", __func__);
 	return 0;
 }
 

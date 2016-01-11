@@ -829,8 +829,10 @@ EXPORT_SYMBOL_GPL(omap_mcbsp_dai);
 
 static int __init snd_omap_mcbsp_init(void)
 {
-	return snd_soc_register_dais(omap_mcbsp_dai,
+	int err = snd_soc_register_dais(omap_mcbsp_dai,
 				     ARRAY_SIZE(omap_mcbsp_dai));
+	printk(KERN_INFO "%s completed\n", __func__);
+	return err;
 }
 module_init(snd_omap_mcbsp_init);
 

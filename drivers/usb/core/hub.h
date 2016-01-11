@@ -201,5 +201,7 @@ struct usb_tt_clear {
 
 extern int usb_hub_clear_tt_buffer(struct urb *urb);
 extern void usb_ep0_reinit(struct usb_device *);
+extern void hub_suspend_for_test(struct usb_device *hub_hdev);
+
 
 #endif /* __LINUX_HUB_H */

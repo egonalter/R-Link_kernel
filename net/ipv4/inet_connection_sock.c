@@ -318,6 +318,7 @@ void inet_csk_init_xmit_timers(struct sock *sk,
 			(unsigned long)sk);
 	setup_timer(&icsk->icsk_delack_timer, delack_handler,
 			(unsigned long)sk);
+	del_timer(&sk->sk_timer);
 	setup_timer(&sk->sk_timer, keepalive_handler, (unsigned long)sk);
 	icsk->icsk_pending = icsk->icsk_ack.pending = 0;
 }

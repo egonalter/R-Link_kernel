@@ -164,8 +164,8 @@ static u32 omap2_iommu_fault_isr(struct iommu *obj, u32 *ra)
 	}
 	printk("\n");
 
-	/* Disable further interrupts */
-	iommu_write_reg(obj, 0, MMU_IRQENABLE);
+	/* Clear fault IRQ */
+	iommu_write_reg(obj, stat, MMU_IRQSTATUS);
 	return stat;
 }
 

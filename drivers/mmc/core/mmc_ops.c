@@ -408,6 +408,9 @@ int mmc_switch(struct mmc_card *card, u8 set, u8 index, u8 value)
 	if (err)
 		return err;
 
+	/* Give CMD6 some extra time to avoid sending the next command too early (ASD-15502) */
+	udelay(100);
+
 	/* Must check status to be sure of no errors */
 	do {
 		err = mmc_send_status(card, &status);

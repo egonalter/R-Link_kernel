@@ -80,6 +80,7 @@ static int uda1334_soc_probe(struct platform_device *pdev)
 		goto register_err;
 	}
 
+	printk(KERN_INFO "%s completed\n", __func__);
 	return ret;
 
 register_err:

@@ -1276,7 +1276,7 @@ int mxt_download_config(struct mxt_data *data, const char *fn)
 				 data->config_crc, config_crc);
 		}
 	} else {
-		dev_warn(dev, "Info block CRC mismatch - attempting to apply config\n");
+		dev_warn(dev, "Info block CRC mismatch - attempting to apply config info_crc=%x info_block_crc=%x\n", info_crc, data->info_block_crc);
 	}
 
 	/* Malloc memory to store configuration */
@@ -1291,6 +1291,10 @@ int mxt_download_config(struct mxt_data *data, const char *fn)
 	}
 
 	while (data_pos < cfg->size) {
+		if (cfg->data[data_pos] == '\n' || cfg->data[data_pos] == '\r' ) {
+			++data_pos;
+			continue;
+		}
 		/* Read type, instance, length */
 		ret = sscanf(cfg->data + data_pos, "%x %x %x%n",
 			     &type, &instance, &size, &offset);
@@ -1298,7 +1302,7 @@ int mxt_download_config(struct mxt_data *data, const char *fn)
 			/* EOF */
 			break;
 		} else if (ret != 3) {
-			dev_err(dev, "Bad format\n");
+			dev_err(dev, "Bad format, ret!=3\n");
 			ret = -EINVAL;
 			goto release_mem;
 		}
@@ -1343,7 +1347,7 @@ int mxt_download_config(struct mxt_data *data, const char *fn)
 				     &val,
 				     &offset);
 			if (ret != 1) {
-				dev_err(dev, "Bad format\n");
+				dev_err(dev, "Bad format, ret!=1\n");
 				ret = -EINVAL;
 				goto release_mem;
 			}

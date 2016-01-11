@@ -106,6 +106,19 @@ config USB_SUSPEND
 
 	  If you are unsure about this, say N here.
 
+config USB_MAX_HUB_TOPOLOGY
+	int "Maximum USB hub topology level"
+	depends on USB
+    range 0 6
+    default 6
+	help
+	  This number indicates the maximum topology level of USB hubs.
+	  The USB 2.0 specification specifies that no more than 7 tiers
+	  are allowed on a single USB bus (root hub included).
+
+	  Therefore, to allow devices on tier 7, this number should never
+	  exceed 6.
+
 config USB_OTG
 	bool
 	depends on USB && EXPERIMENTAL

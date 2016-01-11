@@ -3736,9 +3736,12 @@ static int usb_audio_probe(struct usb_interface *intf,
 	chip = snd_usb_audio_probe(interface_to_usbdev(intf), intf, id);
 	if (chip) {
 		usb_set_intfdata(intf, chip);
+		printk(KERN_INFO "%s completed\n", __func__);
 		return 0;
-	} else
+	} else {
+		printk(KERN_INFO "%s snd_usb_audio_probe error\n", __func__);
 		return -EIO;
+	}
 }
 
 static void usb_audio_disconnect(struct usb_interface *intf)

@@ -611,6 +611,7 @@ static int __init strasbourg_a2_soc_init(void)
 
 	strasbourg_a2_uda1334_modinit(); /* TODO checkme */
 
+	printk(KERN_INFO "%s completed\n", __func__);
 	return 0;
 
 err1:
