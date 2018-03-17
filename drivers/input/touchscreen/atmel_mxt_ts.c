@@ -1260,24 +1260,20 @@ int mxt_download_config(struct mxt_data *data, const char *fn)
 	}
 	data_pos += offset;
 
-	/* The Info Block CRC is calculated over mxt_info and the object table
-	 * If it does not match then we are trying to load the configuration
-	 * from a different chip or firmware version, so the configuration CRC
-	 * is invalid anyway. */
-	if (info_crc == data->info_block_crc) {
-		if (config_crc == 0 || data->config_crc == 0) {
-			dev_info(dev, "CRC zero, attempting to apply config\n");
-		} else if (config_crc == data->config_crc) {
-			dev_info(dev, "Config CRC 0x%06X: OK\n", data->config_crc);
-			ret = 0;
-			goto release;
-		} else {
-			dev_info(dev, "Config CRC 0x%06X: does not match file 0x%06X\n",
-				 data->config_crc, config_crc);
-		}
+	/* The Info Block CRC is not checked anymore, because due to a firmware update this check fails 
+	 *  on newer touch screens. This resulted in that the Config data was written at every boot. 
+	 *  Only the Config CRC is checked now. This Config data is valid for both versions of the firmware. */
+
+	if (config_crc == 0 || data->config_crc == 0) {
+		dev_info(dev, "CRC zero, attempting to apply config\n");
+	} else if (config_crc == data->config_crc) {
+		dev_info(dev, "Config CRC 0x%06X: OK Info CRC 0x%06X \n", data->config_crc, data->info_block_crc);
+		ret = 0;
+		goto release;
 	} else {
-		dev_warn(dev, "Info block CRC mismatch - attempting to apply config info_crc=%x info_block_crc=%x\n", info_crc, data->info_block_crc);
-	}
+		dev_warn(dev, "Config CRC 0x%06X: does not match file 0x%06X. Updating config\n",
+			data->config_crc, config_crc);
+  }
 
 	/* Malloc memory to store configuration */
 	config_start_offset = MXT_OBJECT_START
