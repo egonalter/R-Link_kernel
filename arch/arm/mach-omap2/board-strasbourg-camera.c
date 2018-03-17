@@ -135,13 +135,22 @@ static void tvp515x_reset(void)
 	omap_mux_init_signal("i2c2_scl", OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE4);
 	omap_mux_init_signal("i2c2_sda", OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE4);
 
-	/* Perform the reset sequence */
-	gpio_set_value(TT_VGPIO_CAM_ON, 1);
-	msleep(20);
+	/* Make sure we don't pick up any rogue pulses on the PCLK pad */
+	omap_mux_init_signal("cam_pclk", OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE4);
+
+	/* Perform the reset sequence; assert reset and cam_on */
 	gpio_set_value(TT_VGPIO_CAM_RST, 1);
-	udelay(2); /* 1.5 us of margin */
+	udelay(10);
+	gpio_set_value(TT_VGPIO_CAM_ON, 1);
+
+	msleep(25); /* For safety, always adhere to TVP5151 spec time constant t1 (20ms) */
+
 	gpio_set_value(TT_VGPIO_CAM_RST, 0);
-	udelay(25); /* 5 us of margin */
+
+	msleep(1); /* Block to avoid I2C traffic as per spec'd time constant t3 (200us) */
+
+	/* Restore the PCLK pad now that the output from the TVP5151 should be stable */
+	omap_mux_init_signal("cam_pclk", OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE0);
 
 	/* Reconfigure the mux to use I2C */
 	omap_mux_init_signal("i2c2_scl", OMAP_PIN_INPUT | OMAP_MUX_MODE0);
@@ -155,6 +164,8 @@ static void tvp515x_reset(void)
  *
  * @return result of operation - 0 is success
  */
+static int initialized = 0;
+
 static int tvp515x_power_set(void *v4l2_int_device, int on)
 {
 	struct v4l2_int_device *s;
@@ -170,26 +181,29 @@ static int tvp515x_power_set(void *v4l2_int_device, int on)
 
 	switch (power) {
 	case V4L2_POWER_OFF:
-		// Power Off video decoder
+		// Power off external cam
 		gpio_set_value(TT_VGPIO_CAM_PWR_ON, 0);
+		// Power off video decoder
 		gpio_set_value(TT_VGPIO_CAM_ON, 0);
+		initialized = 0;
 		break;
 
 	case V4L2_POWER_STANDBY:
-		// Power on video decoder
-		gpio_set_value(TT_VGPIO_CAM_ON, 1);
-		gpio_set_value(TT_VGPIO_CAM_PWR_ON, 1);
-#if defined(CONFIG_VIDEO_OMAP3) || defined(CONFIG_VIDEO_OMAP3_MODULE)
-		isp_configure_interface(vdev->cam->isp, &tvp515x_if_config);
-#endif		
-		break;
-
 	case V4L2_POWER_ON:
-		gpio_set_value(TT_VGPIO_CAM_ON, 1);
-		gpio_set_value(TT_VGPIO_CAM_PWR_ON, 1);
+		if (!initialized) {
+			// Power on external cam
+			gpio_set_value(TT_VGPIO_CAM_PWR_ON, 1);
+			// Power on video decoder
+			tvp515x_reset();
 #if defined(CONFIG_VIDEO_OMAP3) || defined(CONFIG_VIDEO_OMAP3_MODULE)
-		isp_configure_interface(vdev->cam->isp, &tvp515x_if_config);
-#endif
+			isp_configure_interface(vdev->cam->isp, &tvp515x_if_config);
+#endif		
+			initialized = 1;
+		} else {
+			// No action required
+			printk(KERN_DEBUG "tvp515x already initialized, no action necessary\n");
+		}
+
 		break;
 
 	default:

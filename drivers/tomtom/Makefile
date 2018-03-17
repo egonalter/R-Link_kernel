@@ -38,6 +38,7 @@ obj-$(CONFIG_TOMTOM_KXR94)		+= sensors/kxr94/
 obj-$(CONFIG_TOMTOM_EWTS98)		+= sensors/ewts98/
 obj-$(CONFIG_TOMTOM_LIS3DH)		+= sensors/lis3dh/
 obj-$(CONFIG_TOMTOM_L3GD20)		+= sensors/l3gd20/
+obj-$(CONFIG_TOMTOM_I3G4250D)		+= sensors/i3g4250d/
 obj-$(CONFIG_TOMTOM_LM26)		+= sensors/lm26/
 obj-$(CONFIG_TOMTOM_CAN_MICRO)		+= can_micro/
 obj-$(CONFIG_TOMTOM_USB_PSUPPLY)	+= usb_psupply/

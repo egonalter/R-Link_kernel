@@ -119,6 +119,13 @@ int omap_mux_init_gpio(int gpio, int val);
  */
 int omap_mux_init_signal(char *muxname, int val);
 
+/**
+ * omap_mux_get_signal - get a signal mux value based on the signal name
+ * @muxname:		Mux name in mode0_name.signal_name format
+ * @val:		Current mux register value
+ */
+int omap_mux_get_signal(char *muxname, int *val);
+
 int omap3_mux_config(char *group);
 
 #else
@@ -169,3 +176,49 @@ int omap_mux_init(u32 mux_pbase, u32 mux_size,
 				struct omap_mux *package_subset,
 				struct omap_board_mux *board_mux,
 				struct omap_ball *package_balls);
+
+#ifdef CONFIG_OMAP3_PADCONF_DUMP
+/**
+ * omap_padconfig_dump () - dump all the mux register values
+ * @devicestate: 	String describing the state of the device
+ *
+ */
+void omap_padconfig_dump_table(const char *devicestate);
+
+/**
+ * omap_padconfig_read_table () - Read all of the registers
+ * into the omap_mux_dump_table, which is then used by the
+ * omap_padconfig_dump().
+ *
+ */
+void omap_padconfig_read_table(void);
+
+/**
+ * omap_mux_dumpregs - a struct containing padconfig dump information
+ * base_vaddr - virtual address that the padconfig registers get mapped to.
+ *		The base_vaddr is set at runtime after the padconf ioremap.
+ * base_offset - The pad conf registers are read in blocks, each block starts at:
+ *		base_vaddr + base_offset.
+ * reg_size - The size of the register to read out (eg. sizeof(u16))
+ * dump_size - The number of unsigned ints to read from
+ *		(last_offset - first_offset).
+ * dump - A memory block that has enough space to store (size * sizeof(u32))
+ * padcfg_offs - A list of registers within the block that will get printed
+ *		when omap_padconfig_dump_table() is invoked.
+ * padcfg_offs_size - The number of elements in the padcfg_offs list.
+ */
+
+/* NOTE: This struct cannot change without corresponding changes in sleep34xx.S->dump_reg */
+struct omap_mux_dumpregs {
+	unsigned long	base_vaddr;
+	unsigned long	base_offset;
+	const ssize_t	reg_size;
+	ssize_t			dump_size;
+	unsigned int *	dump;
+	const u16 *		padcfg_offs;
+	int				padcfg_offs_size;
+};
+extern int padconf_dump_on_suspend_enabled;
+extern struct omap_mux_dumpregs omap_mux_dump_table[];
+
+#endif /* CONFIG_OMAP3_PADCONF_DUMP */

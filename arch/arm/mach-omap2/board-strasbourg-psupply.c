@@ -213,6 +213,10 @@ static int __init strasbourg_ps_init(void)
 	if (ret) {
 		goto usb_failed;
 	}
+	/*
+	 * Make sure to update the wakelock name used in suspend_late (wakelock.c) if the wakelock
+	 * name "strasbourg-power-supply" is changed.
+	 */
 	wake_lock_init(&strasbourg_ps_wake_lock, WAKE_LOCK_SUSPEND, "strasbourg-power-supply");
 
 	ret = gpio_request(TT_VGPIO_ON_OFF, "ON_OFF") || gpio_direction_input (TT_VGPIO_ON_OFF);

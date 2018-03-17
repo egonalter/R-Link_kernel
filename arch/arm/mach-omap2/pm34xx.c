@@ -58,6 +58,7 @@
 #include "prm.h"
 #include "pm.h"
 #include "sdrc.h"
+#include "mux.h"
 
 static int regset_save_on_suspend;
 
@@ -105,7 +106,11 @@ struct power_state {
 
 static LIST_HEAD(pwrst_list);
 
+#ifdef CONFIG_OMAP3_PADCONF_DUMP
+static void (*_omap_sram_idle)(u32 *addr, int save_state, struct omap_mux_dumpregs *dump_table);
+#else
 static void (*_omap_sram_idle)(u32 *addr, int save_state);
+#endif /* CONFIG_OMAP3_PADCONF_DUMP */
 
 static int (*_omap_save_secure_sram)(u32 *addr);
 
@@ -662,7 +667,14 @@ void omap_sram_idle(void)
 	 * get saved. The restore path then reads from this
 	 * location and restores them back.
 	 */
+#ifdef CONFIG_OMAP3_PADCONF_DUMP
+	if (unlikely(padconf_dump_on_suspend_enabled))
+		_omap_sram_idle(omap3_arm_context, save_state, omap_mux_dump_table);
+	else
+		_omap_sram_idle(omap3_arm_context, save_state, NULL);
+#else
 	_omap_sram_idle(omap3_arm_context, save_state);
+#endif /* CONFIG_OMAP3_PADCONF_DUMP */
 	cpu_init();
 
 	if (regset_save_on_suspend)
@@ -728,6 +740,12 @@ void omap_sram_idle(void)
 		omap_uart_resume_idle(1);
 	}
 	omap3_intc_resume_idle();
+
+#ifdef CONFIG_OMAP3_PADCONF_DUMP
+	if (save_state == 3 && unlikely(padconf_dump_on_suspend_enabled)) {
+		omap_padconfig_dump_table("Suspend");
+	}
+#endif /* CONFIG_OMAP3_PADCONF_DUMP */
 
 	if (core_next_state <= PWRDM_POWER_RET) {
 		cm_rmw_mod_reg_bits(OMAP3430_AUTO_CORE_DPLL_MASK,

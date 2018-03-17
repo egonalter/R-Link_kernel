@@ -209,6 +209,7 @@ loop:
 	/*b	loop*/	@Enable to debug by stepping through code
 	/* r0 contains restore pointer in sdram */
 	/* r1 contains information about saving context */
+	/* r2 may contain a pointer to information on where to store register data */
 	ldr     r4, sdrc_power          @ read the SDRC_POWER register
 	ldr     r5, [r4]                @ read the contents of SDRC_POWER
 	orr     r5, r5, #0x40           @ enable self refresh on idle req
@@ -537,6 +538,90 @@ l1_logic_lost:
 	mrc	p15, 0, r4, c10, c2, 0
 	mrc	p15, 0, r5, c10, c2, 1
 	stmia	r8!,{r4-r5}
+
+#ifdef CONFIG_OMAP3_PADCONF_DUMP
+	cmp r2, #0x0		@ If padconf table is not provided,
+	beq dump_skip		@ we can skip this part.
+
+	stmfd	sp!, {r0-r11}	@ Save regs before dump
+dump_reg_table:
+	/*b dump_reg_table*/	@ Debug point
+
+    /* r2 is an array of struct omap_mux_dumpregs */
+	ldr	r0, [r2, #0x0]	@ base_vaddr
+
+	/* Using "cbz r0, dump_end" crashes GNU as */
+	cmp	r0, #0x0
+	beq	dump_end
+
+	ldr	r1, [r2, #0x18]	@ padcfg_offs_size
+	ldr r3, [r2, #0x8]	@ Get register size
+	mul r1, r1, r3		@ Convert count -> bytes
+
+	ldr r3, [r2, #0x10]	@ dump[]
+	mov r4, #0x0		@ padcfg index var
+	ldr r7, [r2, #0x14]	@ padcfg_offs[]
+	mov r8, #0x0		@ dump index var
+	ldr r9, [r2, #0x4]	@ offset
+	mov r10, #0x0		@ zero
+	ldr r11, [r2, #0x8]	@ reg_size
+	/* General reg usage:
+	   r0 = reg base + offset
+	   r1 = padconf offset array size (in bytes)
+	   r2 = table base addr
+	   r3 = dump base
+	   r4 = padconf_index
+	   r5 = padconf_offset[index]
+	   r6 = scratch
+	   r7 = padconf_offs array
+	   r8 = dump_index
+	   r9 = padconf table reg offset
+	   r10 = zero
+	   r11 = reg_size/stride
+	*/
+dump_next_reg:
+	cmp r4, r1
+	beq dump_next_table
+
+	cmp r11, #0x4		@ If reg_size is 4 bytes, we have
+	lsreq r6, r4,  #0x1	@ to first convert the index to
+	movne r6, r4		@ 2 bytes.
+
+	ldrh r5, [r7, +r6]  @ Read offset (16 bit value)
+
+	sub r6, r5, r9		@ Get zero-based offset by subtracting
+	              		@ base offset for this table
+dump_check_sync:
+	cmp r6, r8			
+	beq dump_synced		@ If index - offset != dump index,
+	strh r10, [r3, +r8] @ fill with zero values until it is
+	add r8, r8, r11		@ Increment dump index with reg_size
+	b dump_check_sync
+
+dump_synced:
+	mov r6, #0x2
+	cmp r6, r11			@ Use the appropriate dump
+	beq dump_read_16b	@ for the register size
+dump_read_32b:
+	ldr r6, [r0, +r5]	@ Read reg at base + offset + padconf offset
+	str r6, [r3, +r8]	@ Write reg to dump table
+	add r4, r4, #0x4	@ Increment offset index
+	add r8, r8, #0x4	@ Increment dump index
+	b dump_next_reg 
+dump_read_16b:
+	ldrh r6, [r0, +r5]  @ Read reg at base + offset + padconf offset
+	strh r6, [r3, +r8]  @ Write reg to dump table
+	add r4, r4, #0x2	@ Increment offset index
+	add r8, r8, #0x2	@ Increment dump index
+	b dump_next_reg 
+
+dump_next_table:
+	add	r2, r2, #0x1c		@ Next table
+	b 	dump_reg_table
+dump_end:	
+	ldmfd	sp!, {r0-r11}	@ Restore regs after dump
+dump_skip:
+#endif /* CONFIG_OMAP3_PADCONF_DUMP */
 
 	/* Store current cpsr*/
 	mrs	r2, cpsr

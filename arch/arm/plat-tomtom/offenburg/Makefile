@@ -33,6 +33,9 @@ obj-$(CONFIG_TOMTOM_BCM4329)			+= bcm4329.o
 ifdef CONFIG_TOMTOM_LIS3DH
 obj-y						+= lis3dh.o
 endif
+ifdef CONFIG_TOMTOM_I3G4250D
+obj-y						+= i3g4250d.o
+endif
 ifdef CONFIG_TOMTOM_L3GD20
 obj-y						+= l3gd20.o
 endif

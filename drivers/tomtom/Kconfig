@@ -294,6 +294,8 @@ source "drivers/tomtom/sensors/lis3dh/Kconfig"
 
 source "drivers/tomtom/sensors/l3gd20/Kconfig"
 
+source "drivers/tomtom/sensors/i3g4250d/Kconfig"
+
 source "drivers/tomtom/sensors/lm26/Kconfig"
 
 source "drivers/tomtom/gprs/Kconfig"

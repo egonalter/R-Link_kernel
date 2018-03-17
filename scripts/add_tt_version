@@ -52,8 +52,12 @@ get_current_p4_changelist() {
 		VERSION="${VERSION}-$(whoami)"
 	fi
 }
+  
 
-# echo "Retrieving version information from Perforce..." >&2
-P4CL=$(p4 client -o)
-get_current_p4_changelist $(echo "${P4CL}" |grep '^Root:' |sed "s/^Root:\s*//g")
+# retrieve P4ROOT from the Perforce client if P4ROOT is not defined as environment variable
+if test "$P4ROOT" = ""; then
+    P4ROOT=$(p4 client -o  |grep '^Root:' |sed "s/^Root:\s*//g")
+fi
+
+get_current_p4_changelist $P4ROOT
 echo CONFIG_TOMTOM_VERSION=\"$VERSION\" >> .config

@@ -260,6 +260,14 @@ config OMAP3_SDRC_AC_TIMING
 	  wish to say no.  Selecting yes without understanding what is
 	  going on could result in system crashes;
 
+config OMAP3_PADCONF_DUMP
+	bool "Enable OMAP PadConf dump on startup and suspend/resume"
+	depends on MACH_STRASBOURG
+	default y
+	help
+	  Enable this to dump the OMAP3630's PadConf registers each boot and
+	  suspend/resume cycle to the kernel ringbuffer.
+
 choice
 	bool "FlexST support"
 	depends on MACH_OMAP_ZOOM2 || MACH_OMAP_ZOOM3 || MACH_OMAP_4430SDP

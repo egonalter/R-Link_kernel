@@ -316,6 +316,7 @@ static int command_abort(struct scsi_cmnd *srb)
 {
 	struct us_data *us = host_to_us(srb->device->host);
 
+	printk(KERN_INFO USB_STORAGE "SCSI command aborted. (Retries=%d)\n", srb->retries);
 	US_DEBUGP("%s called\n", __func__);
 
 	/* us->srb together with the TIMED_OUT, RESETTING, and ABORTING

@@ -333,6 +333,28 @@ static int power_suspend_late(struct device *dev)
 #endif
 	if (debug_mask & DEBUG_SUSPEND)
 		pr_info("power_suspend_late return %d\n", ret);
+
+#ifdef CONFIG_MACH_STRASBOURG
+	// Strasbourg machines should not abort a suspend due to a wakelock
+	// once the suspend process has started, except for the wakelock that
+	// is made active on an external power trigger.
+	if (ret) {
+		struct wake_lock *lock, *n;
+		ret = 0;
+		list_for_each_entry_safe(lock, n, &active_wake_locks[WAKE_LOCK_SUSPEND], link) {
+			if (strcmp(lock->name, "strasbourg-power-supply") == 0) {
+				ret = -EAGAIN;
+				break;
+			}
+		}
+
+		if (ret)
+			pr_info("MFD device not suspending due to strasbourg-power-supply wakelock\n");
+		else
+			pr_info("MFD device suspending regardless of wakelock\n");
+	}
+#endif
+
 	return ret;
 }
 

@@ -84,6 +84,7 @@ static struct platform_device pmic_device = {
 
 static ssize_t vbus_power_store(struct kobject *kobj,
         struct kobj_attribute *attr, const char *buf, size_t n) {
+	dev_info(&pmic_device.dev, "Setting vbus, value: %c\n", buf[0]);
 	// Toggle vbus
 	if (buf[0] == '0')
 		gpio_direction_output(TT_VGPIO_5V75_ON, 0);
