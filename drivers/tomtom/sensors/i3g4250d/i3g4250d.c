@@ -68,6 +68,8 @@
 #define FIFO_CTRL_REG	(0x2E)    /* FIFO CONTROL REGISTER */
 #define FIFO_SRC_REG	(0x2F)    /* FIFO SOURCE REGISTER */
 #define OUT_X_L	(0x28)            /* 1st AXIS OUT REG of 6 */
+#define OUT_Y_L	(0x2A)            /* Y-axis (LSB) */
+#define OUT_Z_L	(0x2C)            /* Z-axis (LSB) */
 
 #define AXISDATA_REG	OUT_X_L
 
@@ -99,7 +101,8 @@
 
 /* CTRL_REG5 bits */
 #define FIFO_ENABLE	(0x40)
-#define HPF_ENALBE	(0x11)
+#define HPF_ENABLE	(0x11)
+#define LPF_ENABLE	(0x02)
 
 /* FIFO_CTRL_REG bits */
 #define FIFO_MODE_MASK		(0xE0)
@@ -108,6 +111,8 @@
 #define FIFO_MODE_STREAM	(0x40)
 #define FIFO_WATERMARK_MASK	(0x1F)
 
+#define FIFO_EMPTY_MASK			(0x20)
+#define FIFO_OVRN_MASK			(0x40)
 #define FIFO_STORED_DATA_MASK	(0x1F)
 
 #define I2C_AUTO_INCREMENT	(0x80)
@@ -207,6 +212,7 @@ struct i3g4250d_status {
 	struct hrtimer hr_timer;
 	ktime_t ktime;
 	struct work_struct polling_task;
+	struct timespec ts;
 
 	struct i3g4250d_triple data_sum;
 	u8 sample_count;
@@ -729,15 +735,53 @@ static int i3g4250d_get_data(struct i3g4250d_status *stat,
 	return err;
 }
 
+static int i3g4250d_get_data_fifo(struct i3g4250d_status *stat,
+			     struct i3g4250d_triple *data)
+{
+	int err;
+	unsigned char gyro_out[6];
+	/* y,p,r hardware data */
+	s32 hw_d[3] = { 0 };
+
+	// Dummy read (see: A3G4250D datasheet, section 3.2.4)
+	err = i3g4250d_register_read(stat, gyro_out, AXISDATA_REG);
+
+	gyro_out[0] = (OUT_Y_L);
+	err = i3g4250d_i2c_read(stat, gyro_out, 6);
+
+	if (err < 0)
+		return err;
+
+	hw_d[0] = (s32) ((s16)((gyro_out[5]) << 8) | gyro_out[4]);
+	hw_d[1] = (s32) ((s16)((gyro_out[1]) << 8) | gyro_out[0]);
+	hw_d[2] = (s32) ((s16)((gyro_out[3]) << 8) | gyro_out[2]);
+
+	hw_d[0] = hw_d[0] * stat->sensitivity;
+	hw_d[1] = hw_d[1] * stat->sensitivity;
+	hw_d[2] = hw_d[2] * stat->sensitivity;
+
+	data->x = ((stat->pdata->negate_x) ? (-hw_d[stat->pdata->axis_map_x])
+		   : (hw_d[stat->pdata->axis_map_x]));
+	data->y = ((stat->pdata->negate_y) ? (-hw_d[stat->pdata->axis_map_y])
+		   : (hw_d[stat->pdata->axis_map_y]));
+	data->z = ((stat->pdata->negate_z) ? (-hw_d[stat->pdata->axis_map_z])
+		   : (hw_d[stat->pdata->axis_map_z]));
+
+	return err;
+}
+
 static void i3g4250d_report_values(struct i3g4250d_status *stat,
-					struct i3g4250d_triple *data)
+					struct i3g4250d_triple *data, bool updateTimestamp)
 {
 	u32 bytes_written;
 	u8 data_sample[SAMPLE_SIZE];
 	struct timespec ts;
 
-	ktime_get_ts(&ts);
-	data->ts = (u64)((ts.tv_sec*1000) + (ts.tv_nsec/1000000));
+	if (updateTimestamp)
+	{
+		ktime_get_ts(&ts);
+		data->ts = (u64)((ts.tv_sec*1000) + (ts.tv_nsec/1000000));
+	}
 
 	if (kfifo_avail(sw_buffer_fifo) <  SAMPLE_SIZE)
 		// fifo full -> remove oldest sample
@@ -877,6 +921,7 @@ static int i3g4250d_enable(struct i3g4250d_status *stat)
 			// Give hardware some time to settle...
 			msleep(200);
 			hrtimer_start(&(stat->hr_timer), stat->ktime, HRTIMER_MODE_REL);
+			i3g4250d_update_fifomode(stat, FIFO_MODE_FIFO);
 		}
 	}
 
@@ -894,6 +939,7 @@ static int i3g4250d_disable(struct i3g4250d_status *stat)
 			cancel_work_sync(&stat->polling_task);
 			hrtimer_cancel(&stat->hr_timer);
 			dev_dbg(&stat->client->dev, "%s: cancel_hrtimer ", __func__);
+			i3g4250d_update_fifomode(stat, FIFO_MODE_BYPASS);
 		}
 		i3g4250d_device_power_off(stat);
 	}
@@ -1258,7 +1304,7 @@ static void i3g4250d_report_triple(struct i3g4250d_status *stat)
 	if (err < 0)
 		dev_err(&stat->client->dev, "get_gyroscope_data failed\n");
 	else
-		i3g4250d_report_values(stat, &data_out);
+		i3g4250d_report_values(stat, &data_out, true);
 }
 
 
@@ -1443,32 +1489,86 @@ static void poll_function_work(struct work_struct *polling_task)
 {
 	struct i3g4250d_status *stat;
 	struct i3g4250d_triple data_out;
-	int err;
+	struct i3g4250d_triple data_sum;
+	u8 buf[2];
+	u8 nr_of_samples;
+	int err, i;
 
 	stat = container_of((struct work_struct *)polling_task,
 					struct i3g4250d_status, polling_task);
 
 	mutex_lock(&stat->lock);
-	err = i3g4250d_get_data(stat, &data_out);
-	if (err < 0) {
-		dev_err(&stat->client->dev, "get_rotation_data failed.\n");
-	}
-	else {
-		stat->data_sum.x += data_out.x;
-		stat->data_sum.y += data_out.y;
-		stat->data_sum.z += data_out.z;
-		stat->sample_count += 1;
-	}
 
-	if (stat->sample_count == stat->pdata->avg_samples) {
-		data_out.x = stat->data_sum.x / stat->sample_count;
-		data_out.y = stat->data_sum.y / stat->sample_count;
-		data_out.z = stat->data_sum.z / stat->sample_count;
-		i3g4250d_report_values(stat, &data_out);
-		stat->data_sum.x = 0;
-		stat->data_sum.y = 0;
-		stat->data_sum.z = 0;
-		stat->sample_count = 0;
+	if (stat->fifomode == FIFO_MODE_FIFO)
+	{
+		// Read FIFO asynchronously according Technical Note TN1189 from ST
+		err = i3g4250d_register_read(stat, buf, FIFO_SRC_REG);
+		if (err < 0)
+			dev_err(&stat->client->dev, "error reading fifo source reg\n");
+
+		nr_of_samples = buf[0] & FIFO_STORED_DATA_MASK;
+		dev_dbg(&stat->client->dev, "%s :FIFO_SRC_REG = 0x%02x -> nrOfSamples=%d\n",
+							__func__, buf[0], nr_of_samples);
+
+		if (nr_of_samples == 0)
+		{
+			dev_warn(&stat->client->dev, "fifo empty...\n");
+		}
+		else
+		{
+			data_sum.x = data_sum.y = data_sum.z = 0;
+
+			if ((nr_of_samples == 31) && (buf[0] & FIFO_OVRN_MASK))
+			{
+				nr_of_samples = 32;
+			}
+			// Empty the FIFO
+			for (i=nr_of_samples; i > 0; i--)
+			{
+				err = i3g4250d_get_data_fifo(stat, &data_out);
+				if (err < 0)
+					dev_err(&stat->client->dev, "get_gyroscope_data failed\n");
+				else
+				{
+					data_sum.x += data_out.x;
+					data_sum.y += data_out.y;
+					data_sum.z += data_out.z;
+				}
+			}
+			// Calculate average values
+			data_out.x = data_sum.x / nr_of_samples;
+			data_out.y = data_sum.y / nr_of_samples;
+			data_out.z = data_sum.z / nr_of_samples;
+			data_out.ts = (u64)((stat->ts.tv_sec*1000) + (stat->ts.tv_nsec/1000000));
+			i3g4250d_report_values(stat, &data_out, false);
+
+			i3g4250d_fifo_reset(stat);
+		}
+	}
+	else // FIFO_BYPASS
+	{
+		err = i3g4250d_get_data(stat, &data_out);
+		if (err < 0) {
+			dev_err(&stat->client->dev, "get_rotation_data failed.\n");
+		}
+		else {
+			stat->data_sum.x += data_out.x;
+			stat->data_sum.y += data_out.y;
+			stat->data_sum.z += data_out.z;
+			stat->sample_count += 1;
+		}
+
+		if (stat->sample_count == stat->pdata->avg_samples) {
+			data_out.x = stat->data_sum.x / stat->sample_count;
+			data_out.y = stat->data_sum.y / stat->sample_count;
+			data_out.z = stat->data_sum.z / stat->sample_count;
+			data_out.ts = (u64)((stat->ts.tv_sec*1000) + (stat->ts.tv_nsec/1000000));
+			i3g4250d_report_values(stat, &data_out, false);
+			stat->data_sum.x = 0;
+			stat->data_sum.y = 0;
+			stat->data_sum.z = 0;
+			stat->sample_count = 0;
+		}
 	}
 	mutex_unlock(&stat->lock);
 }
@@ -1479,6 +1579,7 @@ enum hrtimer_restart poll_function_read(struct hrtimer *timer)
 
 	stat = container_of((struct hrtimer *)timer,
 				struct i3g4250d_status, hr_timer);
+	ktime_get_ts(&stat->ts);
 
 	hrtimer_forward_now(&stat->hr_timer, stat->ktime);
 
@@ -1582,11 +1683,12 @@ static int i3g4250d_probe(struct i2c_client *client,
 	stat->resume_state[RES_CTRL_REG2] = ALL_ZEROES;
 	stat->resume_state[RES_CTRL_REG3] = ALL_ZEROES;
 	stat->resume_state[RES_CTRL_REG4] = ALL_ZEROES;
-	stat->resume_state[RES_CTRL_REG5] = ALL_ZEROES;
+	stat->resume_state[RES_CTRL_REG5] = ALL_ZEROES | LPF_ENABLE;
 	stat->resume_state[RES_FIFO_CTRL_REG] = ALL_ZEROES;
 
 	stat->polling_enabled = true;
-	dev_info(&client->dev, "polling mode enabled\n");
+	stat->pdata->poll_interval = 200;
+	dev_info(&client->dev, "FIFO polling mode enabled, interval is 200 ms\n");
 
 	err = i3g4250d_device_power_on(stat);
 	if (err < 0) {
@@ -1595,6 +1697,8 @@ static int i3g4250d_probe(struct i2c_client *client,
 	}
 
 	atomic_set(&stat->enabled, 1);
+
+	i3g4250d_fifo_hwenable(stat, true);
 
 	err = i3g4250d_update_fs_range(stat, stat->pdata->fs_range);
 	if (err < 0) {

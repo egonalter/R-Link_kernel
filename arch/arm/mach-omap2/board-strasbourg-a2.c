@@ -605,7 +605,7 @@ static void __init strasbourg_i2c_init(void)
 			ARRAY_SIZE(strasbourg_i2c1_boardinfo));
 	omap_register_i2c_bus(2, 400, NULL, i2c2_boardinfo,
 			i2c2_boardinfo_size);
-	omap_register_i2c_bus(3, 50, NULL, NULL, 0);
+	omap_register_i2c_bus(3, 400, NULL, NULL, 0);
 }
 
 static void __init strasbourg_mmc_init(int pu_strength)
